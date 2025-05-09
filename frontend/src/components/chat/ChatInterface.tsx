@@ -8,12 +8,22 @@ import { MessageContent } from '@/types';
 import { MessageList } from './MessageList';
 import { useTimer } from '@/app/hooks/hook';
 
-export function ChatInterface() {  const { messages, addMessage, isLoading, sessionId } = useApp();
+export function ChatInterface() {  
+  const { messages, addMessage, isLoading, sessionId } = useApp();
   const [inputValue, setInputValue] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [attachments, setAttachments] = useState<{ file: File; preview: string; type: string }[]>([]);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   // Audio recording states
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
@@ -95,9 +105,6 @@ export function ChatInterface() {  const { messages, addMessage, isLoading, sess
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
-
- 
-
 
   // Start/stop recording
   const toggleRecording = async () => {
@@ -323,6 +330,7 @@ export function ChatInterface() {  const { messages, addMessage, isLoading, sess
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto p-4">
         <MessageList messages={messages} isLoading={isLoading} />
+        <div ref={messagesEndRef} />
       </div>
       
       {/* Recording preview modal */}
