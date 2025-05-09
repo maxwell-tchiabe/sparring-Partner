@@ -23,7 +23,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <AppProvider>
-          <div className="flex h-screen">
+          <div className="flex h-screen overflow-hidden">
             <Navigation />
             <main className="flex-1 overflow-auto">
               {children}

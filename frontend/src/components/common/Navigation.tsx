@@ -30,14 +30,12 @@ export function Navigation() {
     },
   ];
 
-  return (
-    <nav className="flex flex-col h-full bg-gray-900 text-white w-64">
-      <div className="p-4 border-b border-gray-800">
+  return (    <nav className="flex flex-col h-screen bg-gray-900 text-white w-64">
+      <div className="flex-shrink-0 p-4 border-b border-gray-800">
         <h1 className="text-xl font-bold">Language Assistant</h1>
       </div>
-      
-      <div className="flex-1 flex flex-col">
-        <div className="py-4">
+        <div className="flex flex-col flex-1 overflow-hidden">
+        <div className="flex-shrink-0 py-4">
           <ul className="space-y-2 px-2">
             {navItems.map((item) => {
               // Skip admin items for non-admin users
@@ -73,12 +71,11 @@ export function Navigation() {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-2">
+        <div className="flex-1 px-2 border-t border-gray-800">
           <ChatHistory />
         </div>
       </div>
-      
-      <div className="p-4 border-t border-gray-800">
+        <div className="flex-shrink-0 p-4 border-t border-gray-800">
         {user ? (
           <div className="flex items-center">
             <div className="h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center mr-3">
