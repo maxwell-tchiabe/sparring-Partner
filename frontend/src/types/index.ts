@@ -6,6 +6,12 @@ export interface User {
   role: string;
 }
 
+export interface ChatSession {
+  id: string;
+  title: string;
+  createdAt: Date;
+}
+
 export interface UserProgress {
   vocabulary: VocabularyStats;
   grammar: GrammarScore;

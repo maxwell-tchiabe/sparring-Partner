@@ -18,11 +18,11 @@ export function Navigation() {
   };
   
   const navItems = [
-    {
+    /* {
       name: 'Chat',
       href: '/chat',
       icon: MessageSquare,
-    },
+    }, */
     {
       name: 'Dashboard',
       href: '/dashboard',

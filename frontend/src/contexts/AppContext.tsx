@@ -1,14 +1,8 @@
 "use client"
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, Message } from '@/types';
+import { User, Message, ChatSession } from '@/types';
 import { sendMessage, getMessages } from '@/services/api';
 import { v4 as uuidv4 } from 'uuid';
-
-interface ChatSession {
-  id: string;
-  title: string;
-  createdAt: Date;
-}
 
 interface AppContextType {
   user: User | null;
@@ -79,13 +73,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [sessionId]);
 
-  // Start a new session if there isn't one when the component mounts
-  useEffect(() => {
-    if (!sessionId && chatHistory.length === 0) {
-      startNewSession();
-    }
-  }, []);
-
+  
   const startNewSession = () => {
     const newSessionId = uuidv4();
     const newSession: ChatSession = {
