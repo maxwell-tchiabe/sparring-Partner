@@ -1,7 +1,7 @@
 "use client"
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { MessageSquare, BarChart2, Settings, User, Plus } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
@@ -9,7 +9,13 @@ import { ChatHistory } from '@/components/chat/ChatHistory';
 
 export function Navigation() {
   const pathname = usePathname();
+  const router = useRouter();
   const { user, startNewSession } = useApp();
+
+  const handleNewChat = () => {
+    startNewSession();
+    router.push('/chat');
+  };
   
   const navItems = [
     {
@@ -63,7 +69,7 @@ export function Navigation() {
 
         <div className="px-2 py-2">
           <button
-            onClick={startNewSession}
+            onClick={handleNewChat}
             className="w-full flex items-center px-4 py-2 text-gray-300 hover:bg-gray-800 rounded-md transition-colors"
           >
             <Plus className="mr-3 h-5 w-5" />
