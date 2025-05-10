@@ -7,9 +7,9 @@ export interface User {
 }
 
 export interface ChatSession {
-  id: string;
+  _id: string;
   title: string;
-  createdAt: Date;
+  created_at: Date;
 }
 
 export interface UserProgress {

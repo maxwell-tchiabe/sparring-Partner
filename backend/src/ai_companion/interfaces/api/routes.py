@@ -1,9 +1,9 @@
 import logging
 import base64
 from io import BytesIO
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Body
 from langchain_core.messages import HumanMessage
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 
@@ -13,6 +13,7 @@ from ai_companion.modules.speech import SpeechToText, TextToSpeech
 from ai_companion.settings import settings
 from ai_companion.database.mongodb import db
 from ai_companion.models.message import Message, MessageContent
+from ai_companion.models.chat_session import ChatSession
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,58 @@ image_to_text = ImageToText()
 
 # Router for chat API
 chat_router = APIRouter()
+
+@chat_router.post("/api/chat-sessions")
+async def create_chat_session():
+    """Create a new chat session"""
+    try:
+        session = ChatSession(title="New Chat")
+        stored_session = await db.create_chat_session(session)
+        return stored_session
+    except Exception as e:
+        logger.error(f"Error creating chat session: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@chat_router.get("/api/chat-sessions")
+async def get_chat_sessions(user_id: Optional[str] = None):
+    """Get all chat sessions for a user"""
+    try:
+        sessions = await db.get_chat_sessions(user_id)
+        return sessions
+    except Exception as e:
+        logger.error(f"Error retrieving chat sessions: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@chat_router.patch("/api/chat-sessions/{session_id}")
+async def update_chat_session(session_id: str, update_data: Dict = Body(...)):
+    """Update a chat session"""
+    try:
+        # Filter out any fields that shouldn't be updated
+        allowed_fields = {"title"}
+        filtered_data = {k: v for k, v in update_data.items() if k in allowed_fields}
+        
+        if not filtered_data:
+            raise HTTPException(status_code=400, detail="No valid fields to update")
+        
+        was_updated = await db.update_chat_session(session_id, filtered_data)
+        if not was_updated:
+            raise HTTPException(status_code=404, detail="Chat session not found")
+        return {"status": "success", "message": "Chat session updated"}
+    except Exception as e:
+        logger.error(f"Error updating chat session: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@chat_router.delete("/api/chat-sessions/{session_id}")
+async def delete_chat_session(session_id: str):
+    """Delete a chat session and all its messages"""
+    try:
+        was_deleted = await db.delete_chat_session(session_id)
+        if not was_deleted:
+            raise HTTPException(status_code=404, detail="Chat session not found")
+        return {"status": "success", "message": "Chat session deleted"}
+    except Exception as e:
+        logger.error(f"Error deleting chat session: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
 @chat_router.post("/api/chat")
 async def chat_handler(
@@ -129,7 +182,7 @@ async def chat_handler(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@chat_router.get("/messages/{session_id}")
+@chat_router.get("/api/messages/{session_id}")
 async def get_session_messages(session_id: str):
     """Retrieve all messages for a session"""
     try:

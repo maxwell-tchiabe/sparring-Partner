@@ -3,6 +3,7 @@ from pymongo.errors import PyMongoError
 from bson import ObjectId
 from typing import List, Optional
 from ..models.message import Message
+from ..models.chat_session import ChatSession
 from ..settings import settings
 import logging
 
@@ -16,16 +17,24 @@ class MongoDBManager:
         )
         self.db = self.client.get_database("dev_language_assistant")
         self.messages_collection = self.db["messages"]
+        self.chat_sessions_collection = self.db["chat_sessions"]  # New collection
         logger.info("MongoDB manager initialized")
 
     async def init_indexes(self):
         """Initialize database indexes"""
         try:
-            # Create compound index for better query performance
+            # Create compound index for messages
             await self.messages_collection.create_index([
                 ("session_id", 1),
                 ("timestamp", 1)
             ])
+            # Create indexes for chat sessions
+            await self.chat_sessions_collection.create_index(
+                [("created_at", -1)]
+            )
+            await self.chat_sessions_collection.create_index(
+                [("user_id", 1), ("created_at", -1)]
+            )
             logger.info("MongoDB indexes created successfully")
         except PyMongoError as e:
             logger.error(f"Error creating indexes: {str(e)}")
@@ -50,6 +59,16 @@ class MongoDBManager:
             message_dict = self._prepare_for_mongo(message)
             result = await self.messages_collection.insert_one(message_dict)
             message_dict["_id"] = str(result.inserted_id)
+            
+            # Update chat session title based on first user message
+            if message.sender == "user":
+                messages_count = await self.messages_collection.count_documents({"session_id": message.session_id})
+                if messages_count == 1:  # This is the first message in session
+                    await self.chat_sessions_collection.update_one(
+                        {"_id": ObjectId(message.session_id)},
+                        {"$set": {"title": message.content.text[:30] + "..." if len(message.content.text) > 30 else message.content.text}}
+                    )
+            
             return Message(**message_dict)
         except PyMongoError as e:
             logger.error(f"Error saving message: {str(e)}")
@@ -111,6 +130,82 @@ class MongoDBManager:
         except PyMongoError as e:
             logger.error(f"Error retrieving message: {str(e)}")
             raise RuntimeError(f"Failed to retrieve message: {str(e)}")
+
+    async def create_chat_session(self, session: ChatSession) -> ChatSession:
+        """Create a new chat session"""
+        try:
+            session_dict = session.model_dump(by_alias=True)
+            if "_id" in session_dict and not session_dict["_id"]:
+                del session_dict["_id"]
+            
+            result = await self.chat_sessions_collection.insert_one(session_dict)
+            session_dict["_id"] = str(result.inserted_id)
+            return ChatSession(**session_dict)
+        except PyMongoError as e:
+            logger.error(f"Error creating chat session: {str(e)}")
+            raise RuntimeError(f"Failed to create chat session: {str(e)}")
+
+    async def get_chat_sessions(self, user_id: Optional[str] = None, limit: int = 50) -> List[ChatSession]:
+        """Retrieve chat sessions, optionally filtered by user_id"""
+        try:
+            query = {"user_id": user_id} if user_id else {}
+            cursor = self.chat_sessions_collection.find(query).sort("created_at", -1).limit(limit)
+            sessions = await cursor.to_list(length=limit)
+            return [ChatSession(**self._prepare_from_mongo(session)) for session in sessions]
+        except PyMongoError as e:
+            logger.error(f"Error retrieving chat sessions: {str(e)}")
+            raise RuntimeError(f"Failed to retrieve chat sessions: {str(e)}")
+
+    async def update_chat_session(self, session_id: str, update_data: dict) -> bool:
+        """Update a chat session
+        
+        Args:
+            session_id (str): The ID of the chat session to update
+            update_data (dict): Dictionary containing the fields to update
+            
+        Returns:
+            bool: True if the session was updated, False if it wasn't found
+            
+        Raises:
+            RuntimeError: If database operation fails
+        """
+        try:
+            result = await self.chat_sessions_collection.update_one(
+                {"_id": ObjectId(session_id)},
+                {"$set": update_data}
+            )
+            return result.modified_count > 0
+        except PyMongoError as e:
+            logger.error(f"Error updating chat session: {str(e)}")
+            raise RuntimeError(f"Failed to update chat session: {str(e)}")
+
+    async def delete_chat_session(self, session_id: str) -> bool:
+        """Delete a chat session and all its messages
+        
+        Args:
+            session_id (str): The ID of the chat session to delete
+            
+        Returns:
+            bool: True if the session was deleted, False if it wasn't found
+            
+        Raises:
+            RuntimeError: If database operation fails
+        """
+        try:
+            # Delete the session
+            session_result = await self.chat_sessions_collection.delete_one(
+                {"_id": ObjectId(session_id)}
+            )
+            
+            # Delete all messages in the session
+            await self.messages_collection.delete_many(
+                {"session_id": session_id}
+            )
+            
+            return session_result.deleted_count > 0
+        except PyMongoError as e:
+            logger.error(f"Error deleting chat session: {str(e)}")
+            raise RuntimeError(f"Failed to delete chat session: {str(e)}")
 
     async def close(self):
         """Close MongoDB connection"""

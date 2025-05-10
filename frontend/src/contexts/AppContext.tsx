@@ -1,8 +1,7 @@
 "use client"
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Message, ChatSession } from '@/types';
-import { sendMessage, getMessages } from '@/services/api';
-import { v4 as uuidv4 } from 'uuid';
+import { sendMessage, getMessages, createChatSession, getChatSessions } from '@/services/api';
 
 interface AppContextType {
   user: User | null;
@@ -13,8 +12,8 @@ interface AppContextType {
   addMessage: (message: Omit<Message, 'id' | 'timestamp'>) => void;
   clearMessages: () => void;
   setUser: (user: User | null) => void;
-  fetchMessages: (sid: string) => void;
-  startNewSession: () => void;
+  fetchMessages: (sid: string) => Promise<void>;
+  startNewSession: () => Promise<void>;
   setSessionId: (id: string) => void;
 }
 
@@ -27,11 +26,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [sessionId, setSessionId] = useState<string>('');
   const [chatHistory, setChatHistory] = useState<ChatSession[]>([]);
 
-  // Load user and chat history from localStorage on mount
+  // Load chat history from API on mount
   useEffect(() => {
+    const loadChatHistory = async () => {
+      try {
+        const sessions = await getChatSessions();
+        setChatHistory(sessions);
+        console.log('Chat history loaded:', sessions);
+      } catch (error) {
+        console.error('Failed to fetch chat history:', error);
+      }
+    };
+
     const storedUser = localStorage.getItem('user');
-    const storedHistory = localStorage.getItem('chatHistory');
-    
     if (storedUser) {
       try {
         setUser(JSON.parse(storedUser));
@@ -41,14 +48,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    if (storedHistory) {
-      try {
-        setChatHistory(JSON.parse(storedHistory));
-      } catch (error) {
-        console.error('Failed to parse chat history from localStorage:', error);
-        localStorage.removeItem('chatHistory');
-      }
-    }
+    loadChatHistory();
   }, []);
 
   // Save user to localStorage when it changes
@@ -59,33 +59,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem('user');
     }
   }, [user]);
-
-  // Save chat history to localStorage when it changes
-  useEffect(() => {
-    localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
-  }, [chatHistory]);
-
-  // Load messages when component mounts or session changes
-  useEffect(() => {
-    if (sessionId) {
-      console.log('Fetching messages for session:', sessionId);
-      fetchMessages(sessionId);
-    }
-  }, [sessionId]);
-
-  
-  const startNewSession = () => {
-    const newSessionId = uuidv4();
-    const newSession: ChatSession = {
-      id: newSessionId,
-      title: 'New Chat',
-      createdAt: new Date(),
-    };
-    
-    setChatHistory(prev => [...prev, newSession]);
-    setSessionId(newSessionId);
-    clearMessages();
-  };
 
   const fetchMessages = async (sid: string) => {
     try {
@@ -100,6 +73,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Load messages when session changes
+  useEffect(() => {
+    if (sessionId) {
+      console.log('Fetching messages for session:', sessionId);
+      fetchMessages(sessionId);
+    }
+  }, [sessionId]);
+
+  const startNewSession = async () => {
+    try {
+      const newSession = await createChatSession();
+      setChatHistory(prev => [...prev, newSession]);
+      setSessionId(newSession._id);
+      clearMessages();
+    } catch (error) {
+      console.error('Failed to create new session:', error);
+    }
+  };
+
   const addMessage = (messageData: Omit<Message, 'id' | 'timestamp'>) => {
     const newMessage: Message = {
       ...messageData,
@@ -108,17 +100,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
     
     setMessages((prev) => [...prev, newMessage]);
-    
-    // Update chat history title based on first message
-    if (messageData.sender === 'user' && messages.length === 0) {
-      setChatHistory(prev => 
-        prev.map(session => 
-          session.id === sessionId 
-            ? { ...session, title: messageData.content.text?.slice(0, 30) + '...' || 'New Chat' }
-            : session
-        )
-      );
-    }
     
     // If this is a user message, send it to the API
     if (messageData.sender === 'user') {
