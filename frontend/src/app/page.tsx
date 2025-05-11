@@ -1,9 +1,19 @@
+"use client";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/common/Button";
 import { MessageSquare, BarChart2, Settings, ArrowRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useApp } from "@/contexts/AppContext";
 
 export default function Home() {
+  const router = useRouter();
+  const { startNewSession } = useApp();
+  const handleNewChat = () => {
+    startNewSession();
+    router.push('/chat');
+  };
+  
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -19,7 +29,7 @@ export default function Home() {
               </p>
               <div className="flex flex-wrap gap-4">
                 <Link href="/chat">
-                  <Button className="bg-white text-blue-700 hover:bg-blue-50">
+                  <Button onClick={handleNewChat} className="bg-white text-blue-700 hover:bg-blue-50">
                     Start Learning
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
@@ -101,7 +111,7 @@ export default function Home() {
             Join thousands of learners who have accelerated their language proficiency with our AI assistant.
           </p>
           <Link href="/chat">
-            <Button className="bg-white text-blue-700 hover:bg-blue-50 px-8 py-3 text-lg">
+            <Button onClick={handleNewChat} className="bg-white text-blue-700 hover:bg-blue-50 px-8 py-3 text-lg">
               Get Started Now
             </Button>
           </Link>

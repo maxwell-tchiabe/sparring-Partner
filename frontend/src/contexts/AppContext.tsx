@@ -1,6 +1,7 @@
 "use client"
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Message, ChatSession } from '@/types';
+import { useParams } from 'react-router-dom';
 import { sendMessage, getMessages, createChatSession, getChatSessions } from '@/services/api';
 
 interface AppContextType {
@@ -48,6 +49,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     }
 
+    // Check URL for session ID
+    const pathSegments = window.location.pathname.split('/');
+    const urlSessionId = pathSegments[2]; 
+    
+    if (urlSessionId?.trim()) {
+      setSessionId(urlSessionId);
+    } else {
+      console.error("No valid session ID in URL");
+    }
+    
     loadChatHistory();
   }, []);
 
