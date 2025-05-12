@@ -14,5 +14,5 @@ class ChatSession(BaseModel):
 
     id: str = Field(default=None, alias="_id")
     title: str
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     user_id: Optional[str] = None  # For future user authentication implementation

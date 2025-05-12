@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from typing import Optional, Literal
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 from bson import ObjectId
 
 
@@ -25,7 +25,7 @@ class Message(BaseModel):
     session_id: str
     sender: Literal["user", "assistant"]
     content: MessageContent
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     audio: Optional[str] = None
     image: Optional[str] = None
     pdf: Optional[str] = None
