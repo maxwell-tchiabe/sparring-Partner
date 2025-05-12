@@ -1,17 +1,22 @@
 import React, { useState } from 'react';
 import { useApp } from '@/contexts/AppContext';
+import { useNotification } from '@/contexts/NotificationContext';
 import { formatDistanceToNow, isValid } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { MoreVertical, Edit2, Trash2, Check, X } from 'lucide-react';
 import { Button } from '@/components/common/Button';
+import { Modal } from '@/components/common/Modal';
 import { updateChatSession, deleteChatSession } from '@/services/api';
 
 export const ChatHistory = () => {
   const { chatHistory, sessionId, setSessionId, setChatHistory, clearMessages } = useApp();
   const router = useRouter();
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editTitle, setEditTitle] = useState("");
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [deleteModalState, setDeleteModalState] = useState<{ isOpen: boolean; sessionId: string | null }>({
+    isOpen: false,
+    sessionId: null
+  });
 
   const handleChatSelect = (selectedSessionId: string) => {
     if (editingId) return; // Prevent navigation while editing
@@ -24,18 +29,28 @@ export const ChatHistory = () => {
     setEditTitle(session.title);
     setOpenMenuId(null);
   };
+  const { showNotification } = useNotification();
 
   const saveEdit = async (sessionId: string) => {
     try {
+      if (!editTitle.trim()) {
+        showNotification('error', 'Chat title cannot be empty');
+        return;
+      }
+
       await updateChatSession(sessionId, { title: editTitle });
+      
       // Update local state immediately
       const updatedHistory = chatHistory.map(chat => 
         chat._id === sessionId ? { ...chat, title: editTitle } : chat
       );
       setChatHistory(updatedHistory);
       setEditingId(null);
+      
+      showNotification('success', 'Chat title updated successfully');
     } catch (error) {
       console.error('Failed to update chat title:', error);
+      showNotification('error', 'Failed to update chat title. Please try again.');
     }
   };
 
@@ -43,9 +58,13 @@ export const ChatHistory = () => {
     setEditingId(null);
     setEditTitle("");
   };
+  const handleDeleteClick = (sessionId: string) => {
+    setDeleteModalState({ isOpen: true, sessionId });
+  };
 
-  const handleDelete = async (sessionId: string) => {
-    if (!window.confirm('Are you sure you want to delete this chat?')) return;
+  const handleDeleteConfirm = async () => {
+    const sessionId = deleteModalState.sessionId;
+    if (!sessionId) return;
     
     try {
       await deleteChatSession(sessionId);
@@ -58,6 +77,8 @@ export const ChatHistory = () => {
       }
     } catch (error) {
       console.error('Failed to delete chat:', error);
+    } finally {
+      setDeleteModalState({ isOpen: false, sessionId: null });
     }
   };
 
@@ -143,10 +164,9 @@ export const ChatHistory = () => {
                     >
                       <Edit2 className="h-4 w-4" />
                     </button>
-                    <button
-                      onClick={(e) => {
+                    <button                      onClick={(e) => {
                         e.stopPropagation();
-                        handleDelete(session._id);
+                        handleDeleteClick(session._id);
                       }}
                       className={`p-1.5 rounded-full hover:bg-${sessionId === session._id ? 'blue-700' : 'gray-700'}`}
                     >
@@ -157,8 +177,19 @@ export const ChatHistory = () => {
               </>
             )}
           </div>
-        ))}
-      </div>
+        ))}      </div>
+      
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={deleteModalState.isOpen}
+        onClose={() => setDeleteModalState({ isOpen: false, sessionId: null })}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Chat"
+        description="Are you sure you want to delete this chat? This action cannot be undone and all messages will be permanently deleted."
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="warning"
+      />
     </div>
   );
 };
