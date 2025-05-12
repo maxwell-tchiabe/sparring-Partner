@@ -7,7 +7,7 @@ import { Button } from '@/components/common/Button';
 import { updateChatSession, deleteChatSession } from '@/services/api';
 
 export const ChatHistory = () => {
-  const { chatHistory, sessionId, setSessionId } = useApp();
+  const { chatHistory, sessionId, setSessionId, setChatHistory, clearMessages } = useApp();
   const router = useRouter();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
@@ -28,7 +28,11 @@ export const ChatHistory = () => {
   const saveEdit = async (sessionId: string) => {
     try {
       await updateChatSession(sessionId, { title: editTitle });
-      // Update local state will happen through API effect
+      // Update local state immediately
+      const updatedHistory = chatHistory.map(chat => 
+        chat._id === sessionId ? { ...chat, title: editTitle } : chat
+      );
+      setChatHistory(updatedHistory);
       setEditingId(null);
     } catch (error) {
       console.error('Failed to update chat title:', error);
@@ -45,8 +49,11 @@ export const ChatHistory = () => {
     
     try {
       await deleteChatSession(sessionId);
-      // Update local state will happen through API effect
+      // Update local state immediately
+      const updatedHistory = chatHistory.filter(chat => chat._id !== sessionId);
+      setChatHistory(updatedHistory);
       if (sessionId === window.location.pathname.split('/').pop()) {
+        clearMessages(); // Clear messages before navigation
         router.push('/chat');
       }
     } catch (error) {

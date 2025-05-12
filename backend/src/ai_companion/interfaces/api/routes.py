@@ -166,7 +166,7 @@ async def chat_handler(
 
         # Prepare response data
         response_data = {
-            "id": str(stored_assistant_message.id),
+            "_id": str(stored_assistant_message.id),
             "timestamp": stored_assistant_message.timestamp.isoformat(),
             "sender": stored_assistant_message.sender,
             "session_id": session_id,

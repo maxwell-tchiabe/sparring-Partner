@@ -49,7 +49,7 @@ export interface Badge {
 }
 
 export interface Message {
-  id: string;
+  _id: string;
   sessionId: string;
   sender: 'user' | 'assistant';
   content: MessageContent;

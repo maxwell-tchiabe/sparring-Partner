@@ -10,12 +10,13 @@ interface AppContextType {
   isLoading: boolean;
   sessionId: string;
   chatHistory: ChatSession[];
-  addMessage: (message: Omit<Message, 'id' | 'timestamp'>) => void;
+  addMessage: (message: Omit<Message, '_id' | 'timestamp'>) => void;
   clearMessages: () => void;
   setUser: (user: User | null) => void;
   fetchMessages: (sid: string) => Promise<void>;
   startNewSession: () => Promise<void>;
   setSessionId: (id: string) => void;
+  setChatHistory: (history: ChatSession[]) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -55,9 +56,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     
     if (urlSessionId?.trim()) {
       setSessionId(urlSessionId);
-    } else {
-      console.error("No valid session ID in URL");
-    }
+    } 
     
     loadChatHistory();
   }, []);
@@ -76,6 +75,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setIsLoading(true);
       const fetchedMessages = await getMessages(sid);
       setMessages(fetchedMessages);
+      console.log('Fetched messages:', fetchedMessages);
     } catch (error) {
       console.error('Failed to fetch messages:', error);
       setMessages([]);
@@ -103,22 +103,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const addMessage = (messageData: Omit<Message, 'id' | 'timestamp'>) => {
+  const addMessage = (messageData: Omit<Message, '_id' | 'timestamp'>) => {
     const newMessage: Message = {
       ...messageData,
-      id: Math.random().toString(36).substring(2, 9),
+      _id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
       timestamp: new Date(),
     };
     
     setMessages((prev) => [...prev, newMessage]);
+    console.log(' first message :', messages);
     
     // If this is a user message, send it to the API
     if (messageData.sender === 'user') {
       setIsLoading(true);
       
       sendMessage(messageData.sessionId, messageData.content.text || '', messageData.content.audioFile, messageData.content.imageFile)
-        .then((response) => {
+        .then(async (response) => {
+          
           setMessages((prev) => [...prev, response]);
+          // Refresh chat history to update UI
+          const sessions = await getChatSessions();
+          setChatHistory(sessions);
           setIsLoading(false);
         })
         .catch((error) => {
@@ -146,6 +151,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         fetchMessages,
         startNewSession,
         setSessionId,
+        setChatHistory,
       }}
     >
       {children}
