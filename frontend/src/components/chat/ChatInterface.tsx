@@ -9,7 +9,7 @@ import { MessageList } from './MessageList';
 import { useTimer } from '@/app/hooks/hook';
 
 export function ChatInterface() {  
-  const { messages, addMessage, isLoading, sessionId } = useApp();
+  const { messages, addMessage, isLoading, sessionId, startNewSession } = useApp();
   const [inputValue, setInputValue] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [attachments, setAttachments] = useState<{ file: File; preview: string; type: string }[]>([]);
@@ -245,10 +245,28 @@ export function ChatInterface() {
       setAttachments(prev => [...prev, ...newAttachments]);
     }
   });
-
   // Handle sending a message
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if ((!inputValue.trim() && attachments.length === 0) || isLoading) return;
+
+    console.log('Sending message with sessionId:', sessionId);
+
+    // Create a new session if one doesn't exist and get the session ID
+    let currentSessionId = sessionId;
+    if (!currentSessionId) {
+      try {
+        console.log('No session ID found, creating new session...');
+        currentSessionId = await startNewSession();
+        console.log('Created new session with ID:', currentSessionId);
+        if (!currentSessionId) {
+          console.error('Failed to create new session');
+          return;
+        }
+      } catch (error) {
+        console.error('Error creating new session:', error);
+        return;
+      }
+    }
 
     // Create message content based on attachments and text
     let content: MessageContent;
@@ -273,8 +291,8 @@ export function ChatInterface() {
         content = {
           type: 'pdf',
           pdfUrl: URL.createObjectURL(attachment.file),
-          pageCount: 0, 
-          title: attachment.file.name
+          pageCount: 0,
+          text: inputValue || 'Uploaded PDF'
         };
       }
     } else {
@@ -283,13 +301,11 @@ export function ChatInterface() {
         type: 'conversation',
         text: inputValue
       };
-    }
-
-    // Add message to context   
+    }    // Add message to context   
     addMessage({
       sender: 'user',
       content,
-      sessionId
+      sessionId: currentSessionId
     });
 
     // Reset state

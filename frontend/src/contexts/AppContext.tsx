@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { User, Message, ChatSession } from '@/types';
 import { useParams } from 'react-router-dom';
 import { sendMessage, getMessages, createChatSession, getChatSessions } from '@/services/api';
+import { useRouter } from 'next/navigation';
 
 interface AppContextType {
   user: User | null;
@@ -14,7 +15,7 @@ interface AppContextType {
   clearMessages: () => void;
   setUser: (user: User | null) => void;
   fetchMessages: (sid: string) => Promise<void>;
-  startNewSession: () => Promise<void>;
+  startNewSession: () => Promise<string>;
   setSessionId: (id: string) => void;
   setChatHistory: (history: ChatSession[]) => void;
 }
@@ -27,6 +28,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [sessionId, setSessionId] = useState<string>('');
   const [chatHistory, setChatHistory] = useState<ChatSession[]>([]);
+  const router = useRouter();
 
   // Load chat history from API on mount
   useEffect(() => {
@@ -94,12 +96,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const startNewSession = async () => {
     try {
+      console.log('Creating new chat session...');
       const newSession = await createChatSession();
-      setChatHistory(prev => [...prev, newSession]);
+      console.log('Created chat session:', newSession);
+      
+      // Update state
+      setChatHistory(prev => {
+        console.log('Updating chat history with new session');
+        return [...prev, newSession];
+      });
+      
       setSessionId(newSession._id);
+      console.log('Set session ID to:', newSession._id);
+      
       clearMessages();
+      
+      // Don't navigate here - let the addMessage function handle navigation
+      // This prevents race conditions between state updates and navigation
+      
+      return newSession._id;
     } catch (error) {
       console.error('Failed to create new session:', error);
+      throw error;
     }
   };
 
@@ -109,13 +127,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
       _id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
       timestamp: new Date(),
     };
-    
+
+    // Add the message first so it shows up immediately in the UI
     setMessages((prev) => [...prev, newMessage]);
-    console.log(' first message :', messages);
     
     // If this is a user message, send it to the API
     if (messageData.sender === 'user') {
       setIsLoading(true);
+      
+      // Get the path segments to check current route
+      const pathSegments = window.location.pathname.split('/');
+      const currentSessionIdFromUrl = pathSegments[2];
+      
+      // Navigate to the chat session if it's the first message or we're not in the correct session
+      if (!currentSessionIdFromUrl || currentSessionIdFromUrl !== messageData.sessionId) {
+        console.log('Navigating to session:', messageData.sessionId);
+        router.push(`/chat/${messageData.sessionId}`);
+      }
       
       sendMessage(messageData.sessionId, messageData.content.text || '', messageData.content.audioFile, messageData.content.imageFile)
         .then(async (response) => {
