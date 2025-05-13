@@ -1,22 +1,27 @@
-"use client"
-import React from 'react';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { cn } from '@/lib/utils';
-import { MessageSquare, BarChart2, Settings, User, Plus } from 'lucide-react';
-import { useApp } from '@/contexts/AppContext';
-import { ChatHistory } from '@/components/chat/ChatHistory';
+"use client";
+import React from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { MessageSquare, BarChart2, Settings, User, Plus } from "lucide-react";
+import { useApp } from "@/contexts/AppContext";
+import { ChatHistory } from "@/components/chat/ChatHistory";
 
 export function Navigation() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, startNewSession } = useApp();
 
+  // Don't render navigation on home page
+  if (pathname === "/") {
+    return null;
+  }
+
   const handleNewChat = () => {
     startNewSession();
-    router.push('/chat');
+    router.push("/chat");
   };
-  
+
   const navItems = [
     /* {
       name: 'Chat',
@@ -24,38 +29,39 @@ export function Navigation() {
       icon: MessageSquare,
     }, */
     {
-      name: 'Dashboard',
-      href: '/dashboard',
+      name: "Dashboard",
+      href: "/dashboard",
       icon: BarChart2,
     },
     {
-      name: 'Admin',
-      href: '/admin',
+      name: "Admin",
+      href: "/admin",
       icon: Settings,
       adminOnly: true,
     },
   ];
 
-  return (    <nav className="flex flex-col h-screen bg-gray-900 text-white w-64">
+  return (
+    <nav className="flex flex-col h-screen bg-gray-900 text-white w-64">
       <div className="flex-shrink-0 p-4 border-b border-gray-800">
         <h1 className="text-xl font-bold">Language Assistant</h1>
       </div>
-        <div className="flex flex-col flex-1 overflow-hidden">
+      <div className="flex flex-col flex-1 overflow-hidden">
         <div className="flex-shrink-0 py-4">
           <ul className="space-y-2 px-2">
             {navItems.map((item) => {
               // Skip admin items for non-admin users
-              if (item.adminOnly && user?.role !== 'admin') {
+              if (item.adminOnly && user?.role !== "admin") {
                 return null;
               }
-              
+
               return (
                 <li key={item.href}>
                   <Link
                     href={item.href}
                     className={cn(
-                      'flex items-center px-4 py-2 text-gray-300 hover:bg-gray-800 rounded-md transition-colors',
-                      pathname === item.href && 'bg-gray-800 text-white'
+                      "flex items-center px-4 py-2 text-gray-300 hover:bg-gray-800 rounded-md transition-colors",
+                      pathname === item.href && "bg-gray-800 text-white"
                     )}
                   >
                     <item.icon className="mr-3 h-5 w-5" />
@@ -81,7 +87,7 @@ export function Navigation() {
           <ChatHistory />
         </div>
       </div>
-        <div className="flex-shrink-0 p-4 border-t border-gray-800">
+      <div className="flex-shrink-0 p-4 border-t border-gray-800">
         {user ? (
           <div className="flex items-center">
             <div className="h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center mr-3">
