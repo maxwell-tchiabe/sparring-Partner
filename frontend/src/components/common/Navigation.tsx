@@ -1,11 +1,11 @@
-"use client";
-import React from "react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
-import { MessageSquare, BarChart2, Settings, User, Plus } from "lucide-react";
-import { useApp } from "@/contexts/AppContext";
-import { ChatHistory } from "@/components/chat/ChatHistory";
+'use client';
+import React from 'react';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
+import { MessageSquare, BarChart2, Settings, User, Plus } from 'lucide-react';
+import { useApp } from '@/contexts/AppContext';
+import { ChatHistory } from '@/components/chat/ChatHistory';
 
 export function Navigation() {
   const pathname = usePathname();
@@ -13,13 +13,13 @@ export function Navigation() {
   const { user, startNewSession } = useApp();
 
   // Don't render navigation on home page
-  if (pathname === "/") {
+  if (pathname === '/') {
     return null;
   }
 
   const handleNewChat = () => {
     startNewSession();
-    router.push("/chat");
+    router.push('/chat');
   };
 
   const navItems = [
@@ -29,13 +29,13 @@ export function Navigation() {
       icon: MessageSquare,
     }, */
     {
-      name: "Dashboard",
-      href: "/dashboard",
+      name: 'Dashboard',
+      href: '/dashboard',
       icon: BarChart2,
     },
     {
-      name: "Admin",
-      href: "/admin",
+      name: 'Admin',
+      href: '/admin',
       icon: Settings,
       adminOnly: true,
     },
@@ -51,7 +51,7 @@ export function Navigation() {
           <ul className="space-y-2 px-2">
             {navItems.map((item) => {
               // Skip admin items for non-admin users
-              if (item.adminOnly && user?.role !== "admin") {
+              if (item.adminOnly && user?.role !== 'admin') {
                 return null;
               }
 
@@ -60,8 +60,8 @@ export function Navigation() {
                   <Link
                     href={item.href}
                     className={cn(
-                      "flex items-center px-4 py-2 text-gray-300 hover:bg-gray-800 rounded-md transition-colors",
-                      pathname === item.href && "bg-gray-800 text-white"
+                      'flex items-center px-4 py-2 text-gray-300 hover:bg-gray-800 rounded-md transition-colors',
+                      pathname === item.href && 'bg-gray-800 text-white'
                     )}
                   >
                     <item.icon className="mr-3 h-5 w-5" />
