@@ -44,20 +44,27 @@ An advanced AI companion system built with Python and Next.js that provides inte
    - Prompt management
    - Task scheduling
 
-2. **Memory Management** (`/backend/src/ai_companion/modules/memory/`):
+2. **FastAPI Server** (`/backend/src/ai_companion/interfaces/api/`):
+
+   - RESTful API endpoints
+   - Request validation and error handling
+   - API documentation with Swagger/OpenAPI
+   - Authentication and middleware
+
+3. **Memory Management** (`/backend/src/ai_companion/modules/memory/`):
 
    - Short-term memory using SQLite
    - Long-term memory with graph database
    - Memory optimization and retrieval
 
-3. **Module System**:
+4. **Module System**:
 
    - Image processing
    - Speech processing
    - Scheduled tasks
    - Memory management
 
-4. **Database Layer**:
+5. **Database Layer**:
    - MongoDB integration
    - Graph database management
    - State persistence
@@ -153,12 +160,23 @@ docker-compose up --build
 
 ### Running the Application
 
-1. Start the backend server:
+1. Start the backend FastAPI server:
 
 ```bash
 cd backend
-python -m src.ai_companion
+# Using uvicorn directly
+uvicorn ai_companion.interfaces.api.main:app --host 0.0.0.0 --port 8080 --reload
+
+# Or using Docker
+docker-compose up backend
 ```
+
+The FastAPI server provides:
+
+- REST API at `http://localhost:8080/api/v1`
+- WebSocket endpoints at `ws://localhost:8080/ws`
+- Interactive API documentation at `http://localhost:8080/docs`
+- Alternative API documentation at `http://localhost:8080/redoc`
 
 2. Start the frontend development server:
 

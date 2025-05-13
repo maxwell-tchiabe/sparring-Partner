@@ -3,7 +3,10 @@ import base64
 from io import BytesIO
 from typing import Dict, Optional, List
 
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Body
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Body, Query, Path
+from fastapi.responses import JSONResponse
+from fastapi.openapi.utils import get_openapi
+from fastapi.openapi.docs import get_swagger_ui_html
 from langchain_core.messages import HumanMessage
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 
@@ -25,7 +28,32 @@ image_to_text = ImageToText()
 # Router for chat API
 chat_router = APIRouter()
 
-@chat_router.post("/api/chat-sessions")
+# OpenAPI Documentation configuration
+def custom_openapi():
+    if not chat_router.openapi_schema:
+        chat_router.openapi_schema = get_openapi(
+            title="AI Companion API",
+            version="1.0.0",
+            description="""
+            AI Companion API provides endpoints for managing chat sessions and interactions with an AI assistant.
+            The API supports text, audio, and image-based conversations.
+            """,
+            routes=chat_router.routes,
+        )
+        # Add authentication if needed
+        chat_router.openapi_schema["info"]["x-logo"] = {
+            "url": "https://fastapi.tiangolo.com/img/logo-margin/logo-teal.png"
+        }
+    return chat_router.openapi_schema
+
+chat_router.openapi = custom_openapi
+
+@chat_router.post("/api/chat-sessions",
+    response_model=ChatSession,
+    summary="Create a new chat session",
+    description="Creates a new chat session and returns the session details",
+    response_description="The newly created chat session",
+    tags=["Chat Sessions"])
 async def create_chat_session():
     """Create a new chat session"""
     try:
@@ -36,8 +64,15 @@ async def create_chat_session():
         logger.error(f"Error creating chat session: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
-@chat_router.get("/api/chat-sessions")
-async def get_chat_sessions(user_id: Optional[str] = None):
+@chat_router.get("/api/chat-sessions",
+    response_model=List[ChatSession],
+    summary="Get all chat sessions",
+    description="Retrieves all chat sessions for a specific user",
+    response_description="List of chat sessions",
+    tags=["Chat Sessions"])
+async def get_chat_sessions(
+    user_id: Optional[str] = Query(None, description="Filter sessions by user ID")
+):
     """Get all chat sessions for a user"""
     try:
         sessions = await db.get_chat_sessions(user_id)
@@ -46,8 +81,16 @@ async def get_chat_sessions(user_id: Optional[str] = None):
         logger.error(f"Error retrieving chat sessions: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
-@chat_router.patch("/api/chat-sessions/{session_id}")
-async def update_chat_session(session_id: str, update_data: Dict = Body(...)):
+@chat_router.patch("/api/chat-sessions/{session_id}",
+    response_model=Dict[str, str],
+    summary="Update a chat session",
+    description="Updates the specified chat session with new data",
+    response_description="Success message",
+    tags=["Chat Sessions"])
+async def update_chat_session(
+    session_id: str = Path(..., description="The ID of the chat session to update"),
+    update_data: Dict = Body(..., description="Data to update in the chat session")
+):
     """Update a chat session"""
     try:
         # Filter out any fields that shouldn't be updated
@@ -65,8 +108,15 @@ async def update_chat_session(session_id: str, update_data: Dict = Body(...)):
         logger.error(f"Error updating chat session: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
-@chat_router.delete("/api/chat-sessions/{session_id}")
-async def delete_chat_session(session_id: str):
+@chat_router.delete("/api/chat-sessions/{session_id}",
+    response_model=Dict[str, str],
+    summary="Delete a chat session",
+    description="Deletes a chat session and all its associated messages",
+    response_description="Success message",
+    tags=["Chat Sessions"])
+async def delete_chat_session(
+    session_id: str = Path(..., description="The ID of the chat session to delete")
+):
     """Delete a chat session and all its messages"""
     try:
         was_deleted = await db.delete_chat_session(session_id)
@@ -77,12 +127,18 @@ async def delete_chat_session(session_id: str):
         logger.error(f"Error deleting chat session: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
-@chat_router.post("/api/chat")
+@chat_router.post("/api/chat",
+    response_model=Dict,
+    summary="Send a message to chat",
+    description="""Handle chat interactions with support for text, audio, and image inputs.
+    Only one of message, audio, or image should be provided at a time.""",
+    response_description="The assistant's response with corresponding content type",
+    tags=["Chat"])
 async def chat_handler(
-    session_id: str = Form(...),
-    message: Optional[str] = Form(None),
-    audio: Optional[UploadFile] = File(None),
-    image: Optional[UploadFile] = File(None),
+    session_id: str = Form(..., description="ID of the chat session"),
+    message: Optional[str] = Form(None, description="Text message to send"),
+    audio: Optional[UploadFile] = File(None, description="Audio file to process"),
+    image: Optional[UploadFile] = File(None, description="Image file to analyze"),
 ):
     """Handle chat interactions from Next.js frontend"""
     try:
@@ -180,8 +236,15 @@ async def chat_handler(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@chat_router.get("/api/messages/{session_id}")
-async def get_session_messages(session_id: str):
+@chat_router.get("/api/messages/{session_id}",
+    response_model=List[Dict],
+    summary="Get session messages",
+    description="Retrieves all messages for a specific chat session",
+    response_description="List of messages with their content and metadata",
+    tags=["Messages"])
+async def get_session_messages(
+    session_id: str = Path(..., description="The ID of the chat session to get messages from")
+):
     """Retrieve all messages for a session"""
     try:
         messages = await db.get_messages(session_id)
@@ -198,7 +261,12 @@ async def get_session_messages(session_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@chat_router.get("/api/health")
+@chat_router.get("/api/health",
+    response_model=Dict[str, str],
+    summary="Health check",
+    description="Check if the API is up and running",
+    response_description="Service status",
+    tags=["System"])
 async def health_check():
     """Health check endpoint"""
     return {"status": "ok"}
