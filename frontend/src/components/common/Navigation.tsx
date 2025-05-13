@@ -70,7 +70,7 @@ export function Navigation() {
         <div className="px-2 py-2">
           <button
             onClick={handleNewChat}
-            className="w-full flex items-center px-4 py-2 text-gray-300 hover:bg-gray-800 rounded-md transition-colors"
+            className="w-full flex items-center px-4 py-2 text-gray-300 hover:bg-gray-800 rounded-md transition-colors cursor-pointer"
           >
             <Plus className="mr-3 h-5 w-5" />
             <span>New Chat</span>

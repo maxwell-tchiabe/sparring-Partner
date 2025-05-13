@@ -56,14 +56,14 @@ export const Modal: React.FC<ModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50 cursor-pointer" onClick={onClose} />
       
       {/* Modal */}
-      <div className={`relative ${getBgColor()} p-6 rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-all`}>
+      <div className={`relative ${getBgColor()} p-6 rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-all cursor-default`}>
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 text-gray-400 hover:text-gray-600"
+          className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 cursor-pointer"
         >
           <X className="h-5 w-5" />
         </button>
@@ -82,11 +82,12 @@ export const Modal: React.FC<ModalProps> = ({
             <Button
               variant={type === 'warning' ? 'destructive' : 'primary'}
               onClick={onConfirm}
+              className='cursor-pointer'
             >
               {confirmText}
             </Button>
           )}
-          <Button variant="secondary" onClick={onClose}>
+          <Button className='cursor-pointer' variant="secondary" onClick={onClose}>
             {cancelText}
           </Button>
         </div>

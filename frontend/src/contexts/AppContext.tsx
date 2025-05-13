@@ -111,9 +111,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       
       clearMessages();
       
-      // Don't navigate here - let the addMessage function handle navigation
-      // This prevents race conditions between state updates and navigation
-      
       return newSession._id;
     } catch (error) {
       console.error('Failed to create new session:', error);

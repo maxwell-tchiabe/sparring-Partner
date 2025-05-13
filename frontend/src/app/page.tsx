@@ -29,13 +29,13 @@ export default function Home() {
               </p>
               <div className="flex flex-wrap gap-4">
                 <Link href="/chat">
-                  <Button onClick={handleNewChat} className="bg-white text-blue-700 hover:bg-blue-50">
+                  <Button onClick={handleNewChat} className="bg-white text-blue-700 hover:bg-blue-50 cursor-pointer">
                     Start Learning
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
                 <Link href="/dashboard">
-                  <Button variant="outline" className="border-white text-white hover:bg-blue-600">
+                  <Button variant="outline" className="border-white text-white hover:bg-blue-600 cursor-pointer">
                     View Dashboard
                   </Button>
                 </Link>
@@ -111,7 +111,7 @@ export default function Home() {
             Join thousands of learners who have accelerated their language proficiency with our AI assistant.
           </p>
           <Link href="/chat">
-            <Button onClick={handleNewChat} className="bg-white text-blue-700 hover:bg-blue-50 px-8 py-3 text-lg">
+            <Button onClick={handleNewChat} className="bg-white text-blue-700 hover:bg-blue-50 px-8 py-3 text-lg cursor-pointer">
               Get Started Now
             </Button>
           </Link>

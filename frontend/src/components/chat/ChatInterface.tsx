@@ -372,7 +372,7 @@ export function ChatInterface() {
                   </div>
                 )}
                 <button
-                  className="absolute -top-2 -right-2 h-6 w-6 bg-gray-800 rounded-full flex items-center justify-center text-white"
+                  className="absolute -top-2 -right-2 h-6 w-6 bg-gray-800 rounded-full flex items-center justify-center text-white cursor-pointer"
                   onClick={() => removeAttachment(index)}
                 >
                   <X className="h-3 w-3" />
@@ -409,7 +409,7 @@ export function ChatInterface() {
                 variant="secondary"
                 size="sm"
                 onClick={cancelRecording}
-                className="ml-2"
+                className="ml-2 cursor-pointer"
               >
                 Cancel
               </Button>
@@ -440,7 +440,7 @@ export function ChatInterface() {
                   className="text-gray-500 hover:text-gray-700"
                   disabled={isRecording}
                 >
-                  <PaperclipIcon className="h-5 w-5" />
+                  <PaperclipIcon className="h-5 w-5 cursor-pointer" />
                 </Button>
               </div>
               
@@ -453,9 +453,9 @@ export function ChatInterface() {
                 onClick={toggleRecording}
               >
                 {isRecording ? (
-                  <StopCircle className="h-5 w-5" />
+                  <StopCircle className="h-5 w-5 cursor-pointer" />
                 ) : (
-                  <Mic className="h-5 w-5" />
+                  <Mic className="h-5 w-5 cursor-pointer" />
                 )}
               </Button>
               
@@ -464,6 +464,7 @@ export function ChatInterface() {
                 variant="primary"
                 size="sm"
                 type="button"
+                className="cursor-pointer"
                 disabled={(!inputValue.trim() && attachments.length === 0) || isLoading || isRecording}
                 onClick={handleSendMessage}
               >

@@ -67,12 +67,14 @@ export const ChatHistory = () => {
     if (!sessionId) return;
     
     try {
-      await deleteChatSession(sessionId);
-      // Update local state immediately
+      await deleteChatSession(sessionId);      
       const updatedHistory = chatHistory.filter(chat => chat._id !== sessionId);
       setChatHistory(updatedHistory);
-      if (sessionId === window.location.pathname.split('/').pop()) {
-        clearMessages(); // Clear messages before navigation
+      
+      // Clear session and messages if we're deleting the current session
+      if (sessionId === window.location.pathname.split('/').pop() || sessionId === sessionId) {
+        clearMessages();
+        setSessionId('');
         router.push('/chat');
       }
     } catch (error) {
@@ -131,7 +133,7 @@ export const ChatHistory = () => {
                       e.stopPropagation();
                       saveEdit(session._id);
                     }}
-                    className="px-3 py-1 hover:bg-blue-700 rounded"
+                    className="px-3 py-1 hover:bg-blue-700 rounded cursor-pointer"
                   >
                     <Check className="h-4 w-4" />
                   </button>
@@ -140,7 +142,7 @@ export const ChatHistory = () => {
                       e.stopPropagation();
                       cancelEdit();
                     }}
-                    className="px-3 py-1 hover:bg-blue-700 rounded"
+                    className="px-3 py-1 hover:bg-blue-700 rounded cursor-pointer"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -168,7 +170,7 @@ export const ChatHistory = () => {
                       }}
                       className={`p-1.5 rounded-full hover:bg-${sessionId === session._id ? 'blue-700' : 'gray-700'}`}
                     >
-                      <Edit2 className="h-4 w-4" />
+                      <Edit2 className="h-4 w-4 cursor-pointer" />
                     </button>
                     <button                      onClick={(e) => {
                         e.stopPropagation();
@@ -176,7 +178,7 @@ export const ChatHistory = () => {
                       }}
                       className={`p-1.5 rounded-full hover:bg-${sessionId === session._id ? 'blue-700' : 'gray-700'}`}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4 cursor-pointer" />
                     </button>
                   </div>
                 </div>
