@@ -13,6 +13,7 @@ export function ChatInterface() {
   const [inputValue, setInputValue] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [attachments, setAttachments] = useState<{ file: File; preview: string; type: string }[]>([]);
+  const shouldAttachRef = useRef(false); // Reference to track if we should attach the recording
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -32,7 +33,6 @@ export function ChatInterface() {
   const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
   const [waveformData, setWaveformData] = useState<Uint8Array | null>(null);
-  const [isPreviewingRecording, setIsPreviewingRecording] = useState(false);
   const [audioPreviewUrl, setAudioPreviewUrl] = useState<string | null>(null);
   const waveformRef = useRef<HTMLCanvasElement>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -114,46 +114,51 @@ export function ChatInterface() {
         resetTimer();
         setAudioChunks([]);
         setAudioPreviewUrl(null);
-        setIsPreviewingRecording(false);
-  
+        shouldAttachRef.current = true; // Set to true when starting new recording
+
         // Request microphone access
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         const recorder = new MediaRecorder(stream);
-  
+        let recordingChunks: Blob[] = [];
+
         // Initialize audio analyzer
         await initAudioAnalyzer(stream);
-  
+
         // Set up event handlers
-        const chunks: Blob[] = [];
         recorder.ondataavailable = (e) => {
-          chunks.push(e.data);
+          recordingChunks.push(e.data);
         };
-  
+
         recorder.onstop = () => {
-          const audioBlob = new Blob(chunks, { type: 'audio/wav' });
-          const audioUrl = URL.createObjectURL(audioBlob);
-          setAudioPreviewUrl(audioUrl);
-          setAudioChunks(chunks);
-  
-          // Clean up audio context
+          // Create and attach the recording only if not cancelled
+          if (shouldAttachRef.current && recordingChunks.length > 0) {
+            const audioBlob = new Blob(recordingChunks, { type: 'audio/wav' });
+            const audioUrl = URL.createObjectURL(audioBlob);
+            
+            setAttachments(prev => [{
+              file: new File([audioBlob], 'recording.wav', { type: 'audio/wav' }),
+              preview: audioUrl,
+              type: 'audio'
+            }]);
+          }
+
+          // Clean up
           if (audioContext && audioContext.state !== 'closed') {
             audioContext.close().catch(console.error);
           }
-  
+
           setAudioContext(null);
           setAnalyser(null);
           setWaveformData(null);
-  
-          // Stop all tracks
           stream.getTracks().forEach(track => track.stop());
+          shouldAttachRef.current = false; // Reset for next recording
         };
-  
+
         // Start recording
         recorder.start();
         setMediaRecorder(recorder);
-        setAudioChunks(chunks);
         setIsRecording(true);
-  
+
       } catch (error) {
         console.error('Error accessing microphone:', error);
         alert('Could not access microphone. Please check permissions.');
@@ -161,20 +166,23 @@ export function ChatInterface() {
     } else {
       // Stop recording
       if (mediaRecorder) {
-        mediaRecorder.stop();
         setIsRecording(false);
-        setMediaRecorder(null);
-        setIsPreviewingRecording(true);
+        mediaRecorder.stop();
       }
     }
   };
 
   // Cancel recording
   const cancelRecording = () => {
-    if (mediaRecorder && isRecording) {
+    // Set flag to prevent attachment
+    shouldAttachRef.current = false;
+
+    // First stop media tracks to prevent more data
+    if (mediaRecorder && mediaRecorder.stream) {
+      mediaRecorder.stream.getTracks().forEach(track => track.stop());
       mediaRecorder.stop();
     }
-  
+
     // Clean up
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -184,34 +192,16 @@ export function ChatInterface() {
       cancelAnimationFrame(animationRef.current);
       animationRef.current = null;
     }
-  
     if (audioContext && audioContext.state !== 'closed') {
       audioContext.close().catch(console.error);
     }
-  
+
     // Reset all recording-related states
-    setAudioPreviewUrl(null);
-    setIsPreviewingRecording(false);
     setIsRecording(false);
     setMediaRecorder(null);
     setWaveformData(null);
     setAudioContext(null);
     setAnalyser(null);
-    setAudioChunks([]);
-  };  
-
-  // Confirm and attach recording
-  const confirmRecording = () => {
-    if (!audioPreviewUrl) return;
-    
-    setAttachments([{
-      file: new File([new Blob(audioChunks)], 'recording.wav', { type: 'audio/wav' }),
-      preview: audioPreviewUrl,
-      type: 'audio'
-    }]);
-    
-    setIsPreviewingRecording(false);
-    setAudioPreviewUrl(null);
   };
 
   // Clean up on unmount
@@ -227,6 +217,7 @@ export function ChatInterface() {
       };
     };
   }, [audioContext]);
+
   // Handle file uploads
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
@@ -245,6 +236,7 @@ export function ChatInterface() {
       setAttachments(prev => [...prev, ...newAttachments]);
     }
   });
+
   // Handle sending a message
   const handleSendMessage = async () => {
     if ((!inputValue.trim() && attachments.length === 0) || isLoading) return;
@@ -301,7 +293,9 @@ export function ChatInterface() {
         type: 'conversation',
         text: inputValue
       };
-    }    // Add message to context   
+    }
+
+    // Add message to context   
     addMessage({
       sender: 'user',
       content,
@@ -348,50 +342,7 @@ export function ChatInterface() {
         <MessageList messages={messages} isLoading={isLoading} />
         <div ref={messagesEndRef} />
       </div>
-      
-      {/* Recording preview modal */}
-      {isPreviewingRecording && audioPreviewUrl && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-medium mb-4">Recording Preview</h3>
-            
-            <div className="mb-4">
-              <canvas 
-                ref={waveformRef} 
-                width="400" 
-                height="100"
-                className="w-full h-20 bg-gray-100 rounded"
-              />
-            </div>
-            
-            <audio controls src={audioPreviewUrl} className="w-full mb-4" />
-            
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-gray-600">Duration: {formatTime(recordingDuration)}</span>
-              <div className="flex space-x-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={cancelRecording}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Discard
-                </Button>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={confirmRecording}
-                >
-                  <PaperclipIcon className="h-4 w-4 mr-2" />
-                  Attach
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Attachment preview */}
+        {/* Attachment preview */}
       {attachments.length > 0 && (
         <div className="px-4 py-2 border-t border-gray-200">
           <div className="flex flex-wrap gap-2">
@@ -500,7 +451,6 @@ export function ChatInterface() {
                 type="button"
                 className={`${isRecording ? 'text-red-500' : 'text-gray-500 hover:text-gray-700'}`}
                 onClick={toggleRecording}
-                disabled={isPreviewingRecording}
               >
                 {isRecording ? (
                   <StopCircle className="h-5 w-5" />

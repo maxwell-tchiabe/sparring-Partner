@@ -104,18 +104,16 @@ async def chat_handler(
         elif message:
             content = message
         else:
-            raise HTTPException(status_code=400, detail="No valid input provided")
-
-        # Create and store user message
+            raise HTTPException(status_code=400, detail="No valid input provided")        # Create and store user message
         user_message = Message(
             session_id=session_id,
             sender="user",
             content=MessageContent(
                 type="conversation" if message else "audio" if audio else "image",
                 text=content,
-                audioFile=audio_buffer if audio else None,
-                imageFile=image_bytes if image else None
-            )
+            ),
+            audio=base64.b64encode(audio_buffer).decode('utf-8') if audio_buffer else None,
+            image=base64.b64encode(image_bytes).decode('utf-8') if image_bytes else None
         )
         stored_user_message = await db.save_message(user_message)
 
@@ -187,7 +185,14 @@ async def get_session_messages(session_id: str):
     """Retrieve all messages for a session"""
     try:
         messages = await db.get_messages(session_id)
-        return [msg.model_dump(by_alias=True) for msg in messages]
+        return [
+            {
+                **msg.model_dump(by_alias=True),
+                "audio": msg.audio if msg.audio else None,  # Ensure audio is included in response
+                "image": msg.image if msg.image else None,  # Ensure image is included in response
+            }
+            for msg in messages
+        ]
     except Exception as e:
         logger.error(f"Error retrieving messages: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))

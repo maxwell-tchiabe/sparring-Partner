@@ -82,11 +82,17 @@ export const ChatHistory = () => {
     }
   };
 
-  const formatDate = (date: Date) => {
-    if (!isValid(date)) {
+  const formatDate = (date: string | Date) => {
+    try {
+      const parsedDate = typeof date === 'string' ? new Date(date) : date;
+      if (!isValid(parsedDate)) {
+        return 'Invalid date';
+      }
+      return formatDistanceToNow(parsedDate, { addSuffix: true });
+    } catch (error) {
+      console.error('Error formatting date:', error);
       return 'Invalid date';
     }
-    return formatDistanceToNow(date, { addSuffix: true });
   };
 
   if (!chatHistory?.length) {
