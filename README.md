@@ -54,7 +54,7 @@ An advanced AI companion system built with Python and Next.js that provides inte
 3. **Memory Management** (`/backend/src/ai_companion/modules/memory/`):
 
    - Short-term memory using SQLite
-   - Long-term memory with graph database
+   - Long-term memory with Qdrant
    - Memory optimization and retrieval
 
 4. **Module System**:
@@ -97,8 +97,8 @@ An advanced AI companion system built with Python and Next.js that provides inte
 
 - Python 3.12+
 - Node.js 18+
-- MongoDB (optional)
-- Docker (optional)
+- MongoDB
+- Docker
 
 ### Backend Setup
 
@@ -164,17 +164,13 @@ docker-compose up --build
 
 ```bash
 cd backend
-# Using uvicorn directly
-uvicorn ai_companion.interfaces.api.main:app --host 0.0.0.0 --port 8080 --reload
-
-# Or using Docker
-docker-compose up backend
+# using Docker (recommended)
+docker-compose up -d
 ```
 
 The FastAPI server provides:
 
-- REST API at `http://localhost:8080/api/v1`
-- WebSocket endpoints at `ws://localhost:8080/ws`
+- REST API at `http://localhost:8080/api/`
 - Interactive API documentation at `http://localhost:8080/docs`
 - Alternative API documentation at `http://localhost:8080/redoc`
 
@@ -207,6 +203,19 @@ npm run dev
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+## Contributors
+
+<table>
+  <tr>
+    <td align="center"><img src="https://avatars.githubusercontent.com/u/79485395?v=4" width="100" style="border-radius:50%;"/></td>
+    <td>
+      <strong>Loic Maxwell Tchiabe | Passionierter Full Stack Developer | Spezialist für Angular, Java & Python </strong><br />
+      <i>Cloud & AI Systems Enthusiast.</i><br /><br />
+      <a href="https://www.linkedin.com/in/loic-maxwell-tchiabe-softwareentwickler-cloud-ai-java-python-angular/">LinkedIn</a><br />
+    </td>
+  </tr>
+</table>
 
 ## License
 

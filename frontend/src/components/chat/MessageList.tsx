@@ -96,10 +96,21 @@ function renderMessageContent(message: Message) {
       return <p className="whitespace-pre-wrap">{message.content.text}</p>;
       
     case 'image':
+      // Handle both upload preview and server-processed image
+      const imageUrl = message.image 
+        ? `data:image/png;base64,${message.image}`
+        : message.content.imageFile 
+          ? URL.createObjectURL(message.content.imageFile)
+          : null;
+
+      if (!imageUrl) {
+        return <p className="text-red-500">Image data not available</p>;
+      }
+
       return (
         <div>
           <img 
-            src={`data:image/png;base64,${message.image}`}
+            src={imageUrl}
             alt={message.content.text || 'Image'} 
             className="max-w-full rounded-md"
           />
