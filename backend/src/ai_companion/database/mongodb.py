@@ -156,6 +156,25 @@ class MongoDBManager:
             logger.error(f"Error retrieving chat sessions: {str(e)}")
             raise RuntimeError(f"Failed to retrieve chat sessions: {str(e)}")
 
+    async def get_chat_session(self, session_id: str) -> Optional[ChatSession]:
+        """Get a single chat session by ID
+        
+        Args:
+            session_id (str): The ID of the chat session to retrieve
+            
+        Returns:
+            Optional[ChatSession]: The chat session if found, None otherwise
+            
+        Raises:
+            RuntimeError: If database operation fails
+        """
+        try:
+            result = await self.chat_sessions_collection.find_one({"_id": ObjectId(session_id)})
+            return ChatSession(**self._prepare_from_mongo(result)) if result else None
+        except PyMongoError as e:
+            logger.error(f"Error retrieving chat session: {str(e)}")
+            raise RuntimeError(f"Failed to retrieve chat session: {str(e)}")
+
     async def update_chat_session(self, session_id: str, update_data: dict) -> bool:
         """Update a chat session
         

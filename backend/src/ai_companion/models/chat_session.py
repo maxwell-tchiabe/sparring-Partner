@@ -10,9 +10,8 @@ class ChatSession(BaseModel):
         arbitrary_types_allowed=True,
         populate_by_name=True,
         json_encoders={ObjectId: str}
-    )
-
+    )    
     id: str = Field(default=None, alias="_id")
     title: str
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    user_id: Optional[str] = None  # For future user authentication implementation
+    user_id: str

@@ -3,7 +3,7 @@ import base64
 from io import BytesIO
 from typing import Dict, Optional, List
 
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Body, Query, Path
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Body, Query, Path, Request
 from fastapi.responses import JSONResponse
 from fastapi.openapi.utils import get_openapi
 from fastapi.openapi.docs import get_swagger_ui_html
@@ -54,10 +54,11 @@ chat_router.openapi = custom_openapi
     description="Creates a new chat session and returns the session details",
     response_description="The newly created chat session",
     tags=["Chat Sessions"])
-async def create_chat_session():
+async def create_chat_session(request: Request):
     """Create a new chat session"""
     try:
-        session = ChatSession(title="New Chat")
+        user_id = request.state.user_id
+        session = ChatSession(title="New Chat", user_id=user_id)
         stored_session = await db.create_chat_session(session)
         return stored_session
     except Exception as e:
@@ -67,14 +68,13 @@ async def create_chat_session():
 @chat_router.get("/api/chat-sessions",
     response_model=List[ChatSession],
     summary="Get all chat sessions",
-    description="Retrieves all chat sessions for a specific user",
+    description="Retrieves all chat sessions for the authenticated user",
     response_description="List of chat sessions",
     tags=["Chat Sessions"])
-async def get_chat_sessions(
-    user_id: Optional[str] = Query(None, description="Filter sessions by user ID")
-):
-    """Get all chat sessions for a user"""
+async def get_chat_sessions(request: Request):
+    """Get all chat sessions for the authenticated user"""
     try:
+        user_id = request.state.user_id
         sessions = await db.get_chat_sessions(user_id)
         return sessions
     except Exception as e:
@@ -88,11 +88,22 @@ async def get_chat_sessions(
     response_description="Success message",
     tags=["Chat Sessions"])
 async def update_chat_session(
+    request: Request,
     session_id: str = Path(..., description="The ID of the chat session to update"),
     update_data: Dict = Body(..., description="Data to update in the chat session")
 ):
     """Update a chat session"""
     try:
+        user_id = request.state.user_id
+        
+        # Get the session first to verify ownership
+        session = await db.get_chat_session(session_id)
+        if not session:
+            raise HTTPException(status_code=404, detail="Chat session not found")
+            
+        if session.user_id != user_id:
+            raise HTTPException(status_code=403, detail="Not authorized to update this chat session")
+        
         # Filter out any fields that shouldn't be updated
         allowed_fields = {"title"}
         filtered_data = {k: v for k, v in update_data.items() if k in allowed_fields}
@@ -102,7 +113,7 @@ async def update_chat_session(
         
         was_updated = await db.update_chat_session(session_id, filtered_data)
         if not was_updated:
-            raise HTTPException(status_code=404, detail="Chat session not found")
+            raise HTTPException(status_code=500, detail="Failed to update chat session")
         return {"status": "success", "message": "Chat session updated"}
     except Exception as e:
         logger.error(f"Error updating chat session: {e}", exc_info=True)
@@ -115,13 +126,23 @@ async def update_chat_session(
     response_description="Success message",
     tags=["Chat Sessions"])
 async def delete_chat_session(
+    request: Request,
     session_id: str = Path(..., description="The ID of the chat session to delete")
 ):
     """Delete a chat session and all its messages"""
     try:
+        user_id = request.state.user_id
+        # Get the session first to verify ownership
+        session = await db.get_chat_session(session_id)
+        if not session:
+            raise HTTPException(status_code=404, detail="Chat session not found")
+        
+        if session.user_id != user_id:
+            raise HTTPException(status_code=403, detail="Not authorized to delete this chat session")
+            
         was_deleted = await db.delete_chat_session(session_id)
         if not was_deleted:
-            raise HTTPException(status_code=404, detail="Chat session not found")
+            raise HTTPException(status_code=500, detail="Failed to delete chat session")
         return {"status": "success", "message": "Chat session deleted"}
     except Exception as e:
         logger.error(f"Error deleting chat session: {e}", exc_info=True)
@@ -135,6 +156,7 @@ async def delete_chat_session(
     response_description="The assistant's response with corresponding content type",
     tags=["Chat"])
 async def chat_handler(
+    request: Request,
     session_id: str = Form(..., description="ID of the chat session"),
     message: Optional[str] = Form(None, description="Text message to send"),
     audio: Optional[UploadFile] = File(None, description="Audio file to process"),
@@ -142,6 +164,17 @@ async def chat_handler(
 ):
     """Handle chat interactions from Next.js frontend"""
     try:
+        user_id = request.state.user_id
+        
+        # Verify session ownership
+        session = await db.get_chat_session(session_id)
+        if not session:
+            raise HTTPException(status_code=404, detail="Chat session not found")
+            
+        if session.user_id != user_id:
+            raise HTTPException(status_code=403, detail="Not authorized to use this chat session")
+        
+        # Initialize variables for content and buffers
         content = ""
         audio_buffer = None
         image_bytes = None
@@ -243,10 +276,21 @@ async def chat_handler(
     response_description="List of messages with their content and metadata",
     tags=["Messages"])
 async def get_session_messages(
+    request: Request,
     session_id: str = Path(..., description="The ID of the chat session to get messages from")
 ):
     """Retrieve all messages for a session"""
     try:
+        user_id = request.state.user_id
+        
+        # Verify session ownership
+        session = await db.get_chat_session(session_id)
+        if not session:
+            raise HTTPException(status_code=404, detail="Chat session not found")
+            
+        if session.user_id != user_id:
+            raise HTTPException(status_code=403, detail="Not authorized to access this chat session")
+        
         messages = await db.get_messages(session_id)
         return [
             {
