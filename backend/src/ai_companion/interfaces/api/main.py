@@ -3,6 +3,67 @@ from fastapi.responses import JSONResponse
 from ai_companion.interfaces.api.routes import chat_router
 from fastapi.middleware.cors import CORSMiddleware
 from ai_companion.core.auth import verify_token
+from ai_companion.fastrtc_voice_stream.simple_math_agent import agent, agent_config
+
+import argparse
+from typing import Generator, Tuple
+import fastapi
+import numpy as np
+
+
+from fastrtc import (
+    AlgoOptions,
+    ReplyOnPause,
+    Stream,
+    get_stt_model,
+    get_tts_model,
+)
+from groq import Groq
+from loguru import logger
+
+logger.remove()
+logger.add(
+    lambda msg: print(msg),
+    colorize=True,
+    format="<green>{time:HH:mm:ss}</green> | <level>{level}</level> | <level>{message}</level>",
+)
+
+stt_model = get_stt_model()
+tts_model = get_tts_model()
+
+def response(audio: tuple[int, np.ndarray]):
+    prompt = stt_model.stt(audio)
+
+    logger.debug("🧠 Running agent...")
+    agent_response = agent.invoke(
+        {"messages": [{"role": "user", "content": prompt}]}, config=agent_config
+    )
+    response_text = agent_response["messages"][-1].content
+
+    for audio_chunk in tts_model.stream_tts_sync(response_text):
+        logger.debug("🔊 Generating speech...")
+        yield audio_chunk
+
+def create_stream() -> Stream:
+    """
+    Create and configure a Stream instance with audio capabilities.
+
+    Returns:
+        Stream: Configured FastRTC Stream instance
+    """
+
+    return Stream(
+        modality="audio",
+        mode="send-receive",
+        handler=ReplyOnPause(
+            response,
+            algo_options=AlgoOptions(
+                speech_threshold=0.5,
+            ),
+        ),
+    )
+
+stream = create_stream()
 
 
 app = FastAPI()
@@ -50,3 +111,5 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(chat_router)
+
+stream.mount(app)

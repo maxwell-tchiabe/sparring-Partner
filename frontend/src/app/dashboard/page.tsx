@@ -46,8 +46,6 @@ export default function DashboardPage() {
         setLoading(false);
       }
     };
-
-    fetchDashboardData();
   }, []);
 
   if (loading || !stats) {

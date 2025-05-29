@@ -29,6 +29,9 @@ ENV VIRTUAL_ENV=/app/.venv \
 # Install the package in editable mode
 RUN uv pip install -e .
 
+# Install ffmpeg for video processing
+RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
+
 # Define volumes
 VOLUME ["/app/data"]
 
