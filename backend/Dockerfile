@@ -30,8 +30,7 @@ ENV VIRTUAL_ENV=/app/.venv \
 RUN uv pip install -e .
 
 # Install ffmpeg for video processing
-RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
-
+RUN apt-get update && apt-get install -y ffmpeg libavcodec-dev libavformat-dev libswscale-dev && rm -rf /var/lib/apt/lists/*
 # Define volumes
 VOLUME ["/app/data"]
 

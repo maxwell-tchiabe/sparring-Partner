@@ -48,14 +48,14 @@ export default function DashboardPage() {
     };
   }, []);
 
-  if (loading || !stats) {
+  /* if (loading || !stats) {
     return (
       <div className="p-6 max-w-7xl mx-auto">
         <p>Loading...</p>
       </div>
     );
   }
-
+ */
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <header className="mb-8">
@@ -66,7 +66,7 @@ export default function DashboardPage() {
       </header>
 
       {/* Progress Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <ProgressCard
           title="Vocabulary"
           current={stats.vocabulary.learned}
@@ -95,7 +95,7 @@ export default function DashboardPage() {
           icon={<TrendingUp className="h-5 w-5 text-white" />}
           color="bg-orange-500"
         />
-      </div>
+      </div> */}
 
       {/* AI Insights */}
       <div className="mb-8">

@@ -35,6 +35,7 @@ def response(audio: tuple[int, np.ndarray]):
     prompt = stt_model.stt(audio)
 
     logger.debug("🧠 Running agent...")
+    print(f"Received audio input: {prompt}")
     agent_response = agent.invoke(
         {"messages": [{"role": "user", "content": prompt}]}, config=agent_config
     )
@@ -42,6 +43,7 @@ def response(audio: tuple[int, np.ndarray]):
 
     for audio_chunk in tts_model.stream_tts_sync(response_text):
         logger.debug("🔊 Generating speech...")
+        print(f"Generated audio chunk:")
         yield audio_chunk
 
 def create_stream() -> Stream:

@@ -3,17 +3,27 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { MessageSquare, BarChart2, Settings, User, Plus } from 'lucide-react';
+import {
+  MessageSquare,
+  BarChart2,
+  Settings,
+  User,
+  Plus,
+  Mic,
+  LogOut,
+} from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { ChatHistory } from '@/components/chat/ChatHistory';
 
 export function Navigation() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, startNewSession } = useApp();
+  const { startNewSession } = useApp();
+  const { user, signOut } = useAuth();
 
   // Don't render navigation on home page
-  if (pathname === '/') {
+  if (pathname === '/' || pathname === '/login') {
     return null;
   }
 
@@ -22,16 +32,30 @@ export function Navigation() {
     router.push('/chat');
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
   const navItems = [
-    /* {
+    {
       name: 'Chat',
       href: '/chat',
       icon: MessageSquare,
-    }, */
+    },
     {
       name: 'Dashboard',
       href: '/dashboard',
       icon: BarChart2,
+    },
+    {
+      name: 'Voice Assistant',
+      href: '/voice',
+      icon: Mic,
     },
     {
       name: 'Admin',
@@ -89,14 +113,22 @@ export function Navigation() {
       </div>
       <div className="flex-shrink-0 p-4 border-t border-gray-800">
         {user ? (
-          <div className="flex items-center">
-            <div className="h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center mr-3">
-              <User className="h-4 w-4" />
+          <div className="space-y-2">
+            <div className="flex items-center mb-2">
+              <div className="h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center mr-3">
+                <User className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-sm">{user.email}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-medium">{user.name}</p>
-              <p className="text-xs text-gray-400">{user.email}</p>
-            </div>
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center px-4 py-2 text-gray-300 hover:bg-gray-800 rounded-md transition-colors"
+            >
+              <LogOut className="mr-3 h-5 w-5" />
+              <span>Logout</span>
+            </button>
           </div>
         ) : (
           <Link

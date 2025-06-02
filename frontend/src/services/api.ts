@@ -11,7 +11,7 @@ import { supabase } from '@/lib/supabase';
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
 
-async function getAuthHeaders() {
+export async function getAuthHeaders() {
   const session = await supabase.auth.getSession();
 
   const accessToken = session.data.session?.access_token;
@@ -139,26 +139,26 @@ export const sendMessage = async (
 };
 
 // Send an audio message
-export const sendAudioMessage = async (
-  sessionId: string,
-  audioData: Blob
-): Promise<Message> => {
+export const sendWebrtcOffer = async (
+  offer: RTCSessionDescriptionInit
+): Promise<any> => {
   const headers = await getAuthHeaders();
-  const formData = new FormData();
-  formData.append('file', audioData, 'audio.wav');
 
-  const response = await fetch(
-    `${API_BASE_URL}/upload-audio?session_id=${sessionId}`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: headers.Authorization,
-      },
-      body: formData,
-    }
-  );
+  const response = await fetch(`${API_BASE_URL}/webrtc/offer`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      Authorization: headers.Authorization,
+    },
+    body: JSON.stringify({
+      sdp: offer.sdp,
+      type: offer.type,
+      webrtc_id: Math.random().toString(36).substring(7),
+    }),
+  });
   if (!response.ok) {
-    throw new Error('Failed to send audio message');
+    throw new Error('Failed to send webrtc offer');
   }
   return response.json();
 };

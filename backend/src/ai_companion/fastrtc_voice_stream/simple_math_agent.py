@@ -18,6 +18,7 @@ def sum_numbers(a: float, b: float) -> float:
     """Sum two numbers together."""
     result = a + b
     logger.info(f"➕ Calculating sum: {a} + {b} = {result}")
+    print(f"Sum of {a} and {b} is {result}")
     return result
 
 
@@ -25,6 +26,7 @@ def multiply_numbers(a: float, b: float) -> float:
     """Multiply two numbers together."""
     result = a * b
     logger.info(f"✖️ Calculating product: {a} × {b} = {result}")
+    print(f"Product of {a} and {b} is {result}")
     return result
 
 # Create the Tavily search tool
@@ -38,9 +40,11 @@ def draft_linkedin_post(input_text: str) -> str:
         "Draft:"
     )
     logger.info(f"📝 Drafting LinkedIn post for input: {input_text}")
+    print(f"Drafting LinkedIn post for: {input_text}")
 
     response = model.invoke(prompt)
     logger.info(f"✍️ LinkedIn post draft response: {response}")
+    print(f"Drafted LinkedIn post: {response}")
 
     # Ensure the response is a string and strip any extra whitespace
     if isinstance(response, str):
