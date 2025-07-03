@@ -24,42 +24,9 @@ export function Navigation() {
   const pathname = usePathname();
   const router = useRouter();
   const { startNewSession } = useApp();
-  const { user, signOut } = useAuth();
+  const { user, userRole, signOut } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-
-  const [userRole, setUserRole] = useState<string>('');
-  useEffect(() => {
-    // Get user role on mount (if user is already logged in)
-    if (supabase.auth.getSession) {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session) {
-          interface CustomJwtPayload extends JwtPayload {
-            user_role: string;
-          }
-          const jwt = jwtDecode<CustomJwtPayload>(session.access_token);
-          setUserRole(jwt.user_role);
-        }
-      });
-    }
-    // Listen for auth state changes
-    const sub = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
-        interface CustomJwtPayload extends JwtPayload {
-          user_role: string;
-        }
-        const jwt = jwtDecode<CustomJwtPayload>(session.access_token);
-        setUserRole(jwt.user_role);
-      } else {
-        setUserRole('');
-      }
-    });
-    return () => {
-      if (sub.data?.subscription) sub.data.subscription.unsubscribe();
-    };
-  }, []);
-
-  // Clean up subscription on unmount (handled in the effect above)
 
   // Check if mobile view on mount and resize
   useEffect(() => {

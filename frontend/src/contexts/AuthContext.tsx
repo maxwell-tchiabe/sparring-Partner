@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
+import { jwtDecode, JwtPayload } from 'jwt-decode';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
@@ -8,6 +9,7 @@ import { useRouter } from 'next/navigation';
 type AuthContextType = {
   user: User | null;
   session: Session | null;
+  userRole: string;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -19,14 +21,32 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [userRole, setUserRole] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
+    // Helper to extract user role from session
+    function extractUserRole(session: Session | null) {
+      if (session) {
+        interface CustomJwtPayload extends JwtPayload {
+          user_role: string;
+        }
+        try {
+          const jwt = jwtDecode<CustomJwtPayload>(session.access_token);
+          return jwt.user_role || '';
+        } catch {
+          return '';
+        }
+      }
+      return '';
+    }
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      setUserRole(extractUserRole(session));
       setLoading(false);
     });
 
@@ -36,6 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      setUserRole(extractUserRole(session));
       setLoading(false);
     });
 
@@ -64,6 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value = {
     user,
     session,
+    userRole,
     signIn,
     signUp,
     signOut,
