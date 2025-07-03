@@ -1,10 +1,9 @@
-"use client"
+'use client';
 
-import React from 'react';
-import { Message } from '@/types';
-import { formatTime } from '@/lib/utils';
 import { Card } from '@/components/common/Card';
-import { User, Bot } from 'lucide-react';
+import { formatTime } from '@/lib/utils';
+import { Message } from '@/types';
+import { Bot, User } from 'lucide-react';
 
 interface MessageListProps {
   messages: Message[];
@@ -27,7 +26,7 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
       {messages.map((message) => (
         <MessageItem key={message._id} message={message} />
       ))}
-      
+
       {isLoading && (
         <div className="flex justify-start">
           <div className="flex flex-row max-w-[80%]">
@@ -54,10 +53,12 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
 
 function MessageItem({ message }: { message: Message }) {
   const isUser = message.sender === 'user';
-  
+
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-      <div className={`flex ${isUser ? 'flex-row-reverse' : 'flex-row'} max-w-[80%]`}>
+      <div
+        className={`flex ${isUser ? 'flex-row-reverse' : 'flex-row'} max-w-[80%]`}
+      >
         {/* Avatar */}
         <div className={`flex-shrink-0 ${isUser ? 'ml-3' : 'mr-3'}`}>
           <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
@@ -68,20 +69,18 @@ function MessageItem({ message }: { message: Message }) {
             )}
           </div>
         </div>
-        
+
         {/* Message content */}
         <div>
           <Card
             variant="outline"
-            className={`${
-              isUser ? 'bg-blue-50 border-blue-100' : 'bg-white'
-            }`}
+            className={`${isUser ? 'bg-blue-50 border-blue-100' : 'bg-white'}`}
           >
-            <div className="p-3">
-              {renderMessageContent(message)}
-            </div>
+            <div className="p-3">{renderMessageContent(message)}</div>
           </Card>
-          <div className={`text-xs text-gray-500 mt-1 ${isUser ? 'text-right' : 'text-left'}`}>
+          <div
+            className={`text-xs text-gray-500 mt-1 ${isUser ? 'text-right' : 'text-left'}`}
+          >
             {formatTime(message.timestamp)}
           </div>
         </div>
@@ -94,12 +93,12 @@ function renderMessageContent(message: Message) {
   switch (message.content.type) {
     case 'conversation':
       return <p className="whitespace-pre-wrap">{message.content.text}</p>;
-      
+
     case 'image':
       // Handle both upload preview and server-processed image
-      const imageUrl = message.image 
+      const imageUrl = message.image
         ? `data:image/png;base64,${message.image}`
-        : message.content.imageFile 
+        : message.content.imageFile
           ? URL.createObjectURL(message.content.imageFile)
           : null;
 
@@ -109,26 +108,28 @@ function renderMessageContent(message: Message) {
 
       return (
         <div>
-          <img 
+          <img
             src={imageUrl}
-            alt={message.content.text || 'Image'} 
+            alt={message.content.text || 'Image'}
             className="max-w-full rounded-md"
           />
-          {message.content.text && <p className="mt-2 text-sm text-gray-600">{message.content.text}</p>}
+          {message.content.text && (
+            <p className="mt-2 text-sm text-gray-600">{message.content.text}</p>
+          )}
         </div>
       );
-      
+
     case 'audio':
       return (
         <div className="space-y-2">
           <div className="bg-gray-100 p-3 rounded-md w-full">
             <audio controls className="h-8">
-              <source 
-                src={message.audio 
-                  ? `data:audio/wav;base64,${message.audio}`
-                  : URL.createObjectURL(message.content.audioFile)
-                } 
-                
+              <source
+                src={
+                  message.audio
+                    ? `data:audio/wav;base64,${message.audio}`
+                    : URL.createObjectURL(message.content.audioFile)
+                }
               />
               Your browser does not support the audio element.
             </audio>
@@ -138,14 +139,14 @@ function renderMessageContent(message: Message) {
           )}
         </div>
       );
-      
+
     case 'pdf':
       return (
         <div className="flex flex-col items-center">
           <div className="bg-gray-100 p-4 rounded-md flex items-center justify-center w-full">
-            <a 
-              href={message.pdf} 
-              target="_blank" 
+            <a
+              href={message.pdf}
+              target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 hover:underline flex items-center"
             >
@@ -154,11 +155,12 @@ function renderMessageContent(message: Message) {
             </a>
           </div>
           <p className="mt-2 text-xs text-gray-500">
-            {message.content.pageCount} {message.content.pageCount === 1 ? 'page' : 'pages'}
+            {message.content.pageCount}{' '}
+            {message.content.pageCount === 1 ? 'page' : 'pages'}
           </p>
         </div>
       );
-      
+
     default:
       return <p>Unsupported content type</p>;
   }

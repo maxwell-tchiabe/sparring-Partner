@@ -1,24 +1,22 @@
 'use client';
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { cn } from '@/lib/utils';
-import { jwtDecode, JwtPayload } from 'jwt-decode';
-import {
-  MessageSquare,
-  BarChart2,
-  Settings,
-  User,
-  Plus,
-  Mic,
-  LogOut,
-  Menu,
-  X,
-} from 'lucide-react';
+import { ChatHistory } from '@/components/chat/ChatHistory';
 import { useApp } from '@/contexts/AppContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { ChatHistory } from '@/components/chat/ChatHistory';
-import { supabase } from '@/lib/supabase';
+import { cn } from '@/lib/utils';
+import {
+  BarChart2,
+  LogOut,
+  Menu,
+  MessageSquare,
+  Mic,
+  Plus,
+  Settings,
+  User,
+  X,
+} from 'lucide-react';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export function Navigation() {
   const pathname = usePathname();

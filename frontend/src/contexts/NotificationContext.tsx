@@ -1,24 +1,34 @@
-"use client"
+'use client';
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import { Notification, NotificationType } from '@/components/common/Notification';
+import {
+  Notification,
+  NotificationType,
+} from '@/components/common/Notification';
+import React, { createContext, useCallback, useContext, useState } from 'react';
 
 interface NotificationContextType {
   showNotification: (type: NotificationType, message: string) => void;
 }
 
-const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
+const NotificationContext = createContext<NotificationContextType | undefined>(
+  undefined
+);
 
-export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [show, setShow] = useState(false);
   const [type, setType] = useState<NotificationType>('info');
   const [message, setMessage] = useState('');
 
-  const showNotification = useCallback((newType: NotificationType, newMessage: string) => {
-    setType(newType);
-    setMessage(newMessage);
-    setShow(true);
-  }, []);
+  const showNotification = useCallback(
+    (newType: NotificationType, newMessage: string) => {
+      setType(newType);
+      setMessage(newMessage);
+      setShow(true);
+    },
+    []
+  );
 
   const handleClose = () => {
     setShow(false);
@@ -40,7 +50,9 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 export const useNotification = () => {
   const context = useContext(NotificationContext);
   if (context === undefined) {
-    throw new Error('useNotification must be used within a NotificationProvider');
+    throw new Error(
+      'useNotification must be used within a NotificationProvider'
+    );
   }
   return context;
 };
