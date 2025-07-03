@@ -3,20 +3,25 @@ from fastapi.responses import JSONResponse
 from ai_companion.interfaces.api.routes import chat_router
 from fastapi.middleware.cors import CORSMiddleware
 from ai_companion.core.auth import verify_token
-from ai_companion.fastrtc_voice_stream.simple_math_agent import agent, agent_config
 
 import argparse
 from typing import Generator, Tuple
 import fastapi
 import numpy as np
+from elevenlabs.client import ElevenLabs
+from elevenlabs import Voice, VoiceSettings
+import os
+from ai_companion.fastrtc_voice_stream.process_elevenlabs_tts import process_elevenlabs_tts
+from ai_companion.fastrtc_voice_stream.voice_assistant_agent import agent, agent_config
 
 
 from fastrtc import (
     AlgoOptions,
     ReplyOnPause,
     Stream,
-    get_stt_model,
-    get_tts_model,
+    audio_to_bytes,
+    SileroVadOptions,
+    get_twilio_turn_credentials
 )
 from groq import Groq
 from loguru import logger
@@ -28,23 +33,63 @@ logger.add(
     format="<green>{time:HH:mm:ss}</green> | <level>{level}</level> | <level>{message}</level>",
 )
 
-stt_model = get_stt_model()
-tts_model = get_tts_model()
+elevenlabs_client = ElevenLabs(api_key=os.environ.get("ELEVENLABS_API_KEY"))
+groq_client = Groq()
 
-def response(audio: tuple[int, np.ndarray]):
-    prompt = stt_model.stt(audio)
+def response(
+    audio: tuple[int, np.ndarray],
+) -> Generator[Tuple[int, np.ndarray], None, None]:
+    """
+    Process audio input, transcribe it, generate a response using LangGraph, and deliver TTS audio.
+
+    Args:
+        audio: Tuple containing sample rate and audio data
+
+    Yields:
+        Tuples of (sample_rate, audio_array) for audio playback
+    """
+    logger.info("🎙️ Received audio input")
+
+    logger.debug("🔄 Transcribing audio...")
+    transcript = groq_client.audio.transcriptions.create(
+        file=("audio-file.mp3", audio_to_bytes(audio)),
+        model="whisper-large-v3-turbo",
+        response_format="text",
+    )
+    logger.info(f'👂 Transcribed: "{transcript}"')
 
     logger.debug("🧠 Running agent...")
-    print(f"Received audio input: {prompt}")
     agent_response = agent.invoke(
-        {"messages": [{"role": "user", "content": prompt}]}, config=agent_config
+        {"messages": [{"role": "user", "content": transcript}]}, config=agent_config
     )
     response_text = agent_response["messages"][-1].content
+    logger.info(f'💬 Response: "{response_text}"')
 
-    for audio_chunk in tts_model.stream_tts_sync(response_text):
+    logger.debug("🔊 Generating speech...")
+    """ tts_response = groq_client.audio.speech.create(
+        model="playai-tts",
+        voice="Celeste-PlayAI",
+        response_format="wav",
+        input=response_text,
+    ) """
+    try:
         logger.debug("🔊 Generating speech...")
-        print(f"Generated audio chunk:")
-        yield audio_chunk
+        tts_stream = elevenlabs_client.text_to_speech.convert(
+            voice_id=os.environ.get("ELEVENLABS_VOICE_ID"),
+            model_id="eleven_turbo_v2",
+            text=response_text,
+            voice_settings=VoiceSettings(
+                stability=0.5,
+                similarity_boost=0.5,
+                style=0.0,
+                speaker_boost=True
+            )
+        )
+        
+        yield from process_elevenlabs_tts(tts_stream)
+    except Exception as e:
+        logger.error(f"Error generating speech: {e}")
+        raise
 
 def create_stream() -> Stream:
     """
@@ -57,10 +102,20 @@ def create_stream() -> Stream:
     return Stream(
         modality="audio",
         mode="send-receive",
+        rtc_configuration = get_twilio_turn_credentials(),
         handler=ReplyOnPause(
             response,
             algo_options=AlgoOptions(
-                speech_threshold=0.5,
+                audio_chunk_duration=0.5,
+                started_talking_threshold=0.1,
+                speech_threshold=0.03
+            ),
+            model_options=SileroVadOptions(
+                threshold=0.75,
+                min_speech_duration_ms=250,
+                min_silence_duration_ms=1500,
+                speech_pad_ms=400,
+                max_speech_duration_s=15
             ),
         ),
     )

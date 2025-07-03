@@ -131,15 +131,15 @@ export class WebRTCClient {
       const headers = await getAuthHeaders();
 
       // Use same-origin request to avoid CORS preflight
-      const response = await fetch('http://localhost:8000/webrtc/offer', {
+      const response = await fetch('http://localhost:8080/webrtc/offer', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
-          //Authorization: headers.Authorization,
+          Authorization: headers.Authorization,
         },
-        mode: 'cors', // Explicitly set CORS mode
-        credentials: 'same-origin',
+        //mode: 'cors', // Explicitly set CORS mode
+        //credentials: 'same-origin',
         body: JSON.stringify({
           sdp: offer.sdp,
           type: offer.type,

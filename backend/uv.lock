@@ -33,6 +33,7 @@ dependencies = [
     { name = "sentence-transformers" },
     { name = "supabase" },
     { name = "together" },
+    { name = "twilio" },
 ]
 
 [package.metadata]
@@ -63,6 +64,7 @@ requires-dist = [
     { name = "sentence-transformers", specifier = ">=3.3.1" },
     { name = "supabase", specifier = ">=2.11.0" },
     { name = "together", specifier = ">=1.3.10" },
+    { name = "twilio", specifier = ">=9.6.2" },
 ]
 
 [[package]]
@@ -115,6 +117,18 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/61/f9/58b3ce002d1b0b3630ccd02ecbfc6932d00242eb40182e76a65ddbf6ec26/aiohttp-3.12.4-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:c20421e165410bb632f64c5693b1f69e6911dbde197fa0dcd3a0c65d505f776b", size = 1701004 },
     { url = "https://files.pythonhosted.org/packages/ee/7c/c1a5e7704fef91f115bd399e47b9613cf11c8caec041a326e966f190c994/aiohttp-3.12.4-cp313-cp313-win32.whl", hash = "sha256:834a2f08eb800af07066af9f26eda4c2d6f7fe0737a3c0aef448f1ba8132fed9", size = 413468 },
     { url = "https://files.pythonhosted.org/packages/65/31/e252246332a12abf17f66c8f8360730a5a3a1dd354ca48ccfb90bbb122db/aiohttp-3.12.4-cp313-cp313-win_amd64.whl", hash = "sha256:4c78018c4e8118efac767d5d91c3565919c7e021762c4644198ec5b8d426a071", size = 439411 },
+]
+
+[[package]]
+name = "aiohttp-retry"
+version = "2.9.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "aiohttp" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/9d/61/ebda4d8e3d8cfa1fd3db0fb428db2dd7461d5742cea35178277ad180b033/aiohttp_retry-2.9.1.tar.gz", hash = "sha256:8eb75e904ed4ee5c2ec242fefe85bf04240f685391c4879d8f541d6028ff01f1", size = 13608 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1a/99/84ba7273339d0f3dfa57901b846489d2e5c2cd731470167757f1935fffbd/aiohttp_retry-2.9.1-py3-none-any.whl", hash = "sha256:66d2759d1921838256a05a3f80ad7e724936f083e35be5abb5e16eed6be6dc54", size = 9981 },
 ]
 
 [[package]]
@@ -4221,6 +4235,21 @@ dependencies = [
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7d/74/4bf2702b65e93accaa20397b74da46fb7a0356452c1bb94dbabaf0582930/triton-3.3.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:47bc87ad66fa4ef17968299acacecaab71ce40a238890acc6ad197c3abe2b8f1", size = 156516468 },
     { url = "https://files.pythonhosted.org/packages/0a/93/f28a696fa750b9b608baa236f8225dd3290e5aff27433b06143adc025961/triton-3.3.0-cp313-cp313t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:ce4700fc14032af1e049005ae94ba908e71cd6c2df682239aed08e49bc71b742", size = 156580729 },
+]
+
+[[package]]
+name = "twilio"
+version = "9.6.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "aiohttp" },
+    { name = "aiohttp-retry" },
+    { name = "pyjwt" },
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/fa/c9/441a07f6552f2b504812501d56c41bd85b02afeef6c23ab8baf41ed6c70e/twilio-9.6.2.tar.gz", hash = "sha256:5da13bb497e39ece34cb9f2b3bc911f3288928612748f7688b3bda262c2767a1", size = 1041300 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/67/91/382e83e5d205a7ae4325b66d40cd2fa6ce85526f2ed8fc553265e19abbe4/twilio-9.6.2-py2.py3-none-any.whl", hash = "sha256:8d4af6f42850734a921857df42940f7fed84e3e4a508d0d6bef5b9fb7dc08357", size = 1909253 },
 ]
 
 [[package]]

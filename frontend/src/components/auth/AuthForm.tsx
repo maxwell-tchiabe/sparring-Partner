@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { z } from 'zod'; // For schema validation
+import { useNotification } from '@/contexts/NotificationContext';
 
 // Define validation schema
 const authSchema = z.object({
@@ -24,6 +25,8 @@ export function AuthForm() {
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
   const router = useRouter();
+
+  const { showNotification } = useNotification();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -70,7 +73,8 @@ export function AuthForm() {
         router.push('/chat');
       } else {
         await signUp(formData.email, formData.password);
-        alert(
+        showNotification(
+          'success',
           'Registration successful! Please check your email to verify your account.'
         );
       }
@@ -159,7 +163,7 @@ export function AuthForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
+              className="w-full flex cursor-pointer justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? (
                 <span className="flex items-center">
@@ -201,7 +205,7 @@ export function AuthForm() {
               setIsLogin(!isLogin);
               setErrors({});
             }}
-            className="text-sm text-indigo-600 hover:text-indigo-500 font-medium"
+            className="text-sm cursor-pointer text-indigo-600 hover:text-indigo-500 font-medium"
           >
             {isLogin
               ? 'Need an account? Sign Up'

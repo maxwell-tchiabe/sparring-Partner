@@ -13,6 +13,7 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { LogoA } from '../logos/LogoA';
 
 export function Header() {
   const router = useRouter();
@@ -36,10 +37,14 @@ export function Header() {
           <div className="flex-shrink-0 flex items-center">
             <Link href="/">
               <div className="flex items-center">
-                <MessageSquare className="h-8 w-8 text-blue-600" />
-                <span className="ml-2 text-xl font-bold text-gray-900">
-                  LangAI
-                </span>
+                <div className="flex items-center">
+                  <LogoA
+                    width={100}
+                    height={100}
+                    className="hover:scale-105 transition-transform"
+                  />
+                </div>
+                <span className="text-xl font-bold text-gray-900">LangAI</span>
               </div>
             </Link>
           </div>
@@ -48,21 +53,21 @@ export function Header() {
           <nav className="hidden md:flex space-x-8">
             <button
               onClick={() => handleProtectedAction('/chat')}
-              className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600"
+              className="inline-flex cursor-pointer items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600"
             >
               <MessageSquare className="h-5 w-5 mr-1" />
               Live Chat
             </button>
             <button
               onClick={() => handleProtectedAction('/dashboard')}
-              className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600"
+              className="inline-flex cursor-pointer items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600"
             >
               <BarChart2 className="h-5 w-5 mr-1" />
               Dashboard
             </button>
             <button
               onClick={() => handleProtectedAction('/voice')}
-              className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600"
+              className="inline-flex cursor-pointer items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-blue-600"
             >
               <Mic className="h-5 w-5 mr-1" />
               Voice Assistant
