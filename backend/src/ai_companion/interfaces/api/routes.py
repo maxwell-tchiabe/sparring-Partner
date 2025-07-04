@@ -2,6 +2,7 @@ import logging
 import base64
 from io import BytesIO
 from typing import Dict, Optional, List
+from jose import JWTError, jwt
 
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Body, Query, Path, Request
 from fastapi.responses import JSONResponse
@@ -9,6 +10,7 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.openapi.docs import get_swagger_ui_html
 from langchain_core.messages import HumanMessage
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
+from ai_companion.core.auth import verify_token
 
 from ai_companion.graph import graph_builder
 from ai_companion.modules.image import ImageToText
@@ -18,7 +20,41 @@ from ai_companion.database.mongodb import db
 from ai_companion.models.message import Message, MessageContent
 from ai_companion.models.chat_session import ChatSession
 
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+
 logger = logging.getLogger(__name__)
+
+# Initialize rate limiter
+limiter = Limiter(key_func=get_remote_address)
+
+# Apply to router (FastAPI v0.95+)
+def include_limiter(app):
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
+    app.add_middleware(SlowAPIMiddleware)
+
+# Rate limit error handler
+async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    return JSONResponse(
+        status_code=429,
+        content={"error": "Too many requests"},
+        headers={"Retry-After": str(exc.retry_after)}
+    )
+
+# Shared limit for all message-sending endpoints
+message_send_limit = limiter.shared_limit("3/hour", scope="send_messages")
+
+
+# Custom key function (e.g., using JWT)
+def get_user_identifier(request: Request):
+    auth = request.headers.get("Authorization")
+    if auth and auth.startswith("Bearer "):
+        token = auth.split(" ")[1]
+        return verify_token(token)
+    return get_remote_address(request)
 
 # Global module instances
 speech_to_text = SpeechToText()
@@ -125,6 +161,7 @@ async def update_chat_session(
     description="Deletes a chat session and all its associated messages",
     response_description="Success message",
     tags=["Chat Sessions"])
+@limiter.limit("1/minute", key_func=get_user_identifier)
 async def delete_chat_session(
     request: Request,
     session_id: str = Path(..., description="The ID of the chat session to delete")
@@ -155,6 +192,7 @@ async def delete_chat_session(
     Only one of message, audio, or image should be provided at a time.""",
     response_description="The assistant's response with corresponding content type",
     tags=["Chat"])
+@message_send_limit
 async def chat_handler(
     request: Request,
     session_id: str = Form(..., description="ID of the chat session"),
