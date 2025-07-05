@@ -125,6 +125,12 @@ export const sendMessage = async (
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+
+      if (response.status === 429) {
+        throw new Error(
+          'Too many requests. Please wait before sending more messages.'
+        );
+      }
       throw new Error(
         errorData.detail || `Request failed with status ${response.status}`
       );

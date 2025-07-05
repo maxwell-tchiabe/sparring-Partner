@@ -38,10 +38,14 @@ def include_limiter(app):
 
 # Rate limit error handler
 async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    headers = {}
+    retry_after = getattr(exc, "retry_after", None)
+    if retry_after is not None:
+        headers["Retry-After"] = str(retry_after)
     return JSONResponse(
         status_code=429,
         content={"error": "Too many requests"},
-        headers={"Retry-After": str(exc.retry_after)}
+        headers=headers
     )
 
 # Shared limit for all message-sending endpoints

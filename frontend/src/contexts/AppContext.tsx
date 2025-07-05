@@ -7,6 +7,7 @@ import {
 } from '@/services/api';
 import { ChatSession, Message, User } from '@/types';
 import { useRouter } from 'next/navigation';
+import { useNotification } from '@/contexts/NotificationContext';
 import {
   createContext,
   ReactNode,
@@ -19,6 +20,7 @@ interface AppContextType {
   user: User | null;
   messages: Message[];
   isLoading: boolean;
+  showUpgrade: boolean;
   sessionId: string;
   chatHistory: ChatSession[];
   addMessage: (message: Omit<Message, '_id' | 'timestamp'>) => void;
@@ -39,6 +41,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [sessionId, setSessionId] = useState<string>('');
   const [chatHistory, setChatHistory] = useState<ChatSession[]>([]);
   const router = useRouter();
+  const { showNotification } = useNotification();
+  const [showUpgrade, setShowUpgrade] = useState(false);
 
   // Load chat history from API on mount
   useEffect(() => {
@@ -169,6 +173,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setIsLoading(false);
         })
         .catch((error) => {
+          showNotification('error', error.message || 'Failed to send message.');
+          if (
+            error.message &&
+            error.message.toLowerCase().includes('too many requests')
+          ) {
+            setShowUpgrade(true);
+          }
           console.error('Failed to send message:', error);
           setIsLoading(false);
         });
@@ -185,6 +196,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         user,
         messages,
         isLoading,
+        showUpgrade,
         sessionId,
         chatHistory,
         addMessage,

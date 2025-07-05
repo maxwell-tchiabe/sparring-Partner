@@ -7,10 +7,17 @@ import { Mic, PaperclipIcon, Send, StopCircle, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { MessageList } from './MessageList';
+import Link from 'next/link';
 
 export function ChatInterface() {
-  const { messages, addMessage, isLoading, sessionId, startNewSession } =
-    useApp();
+  const {
+    messages,
+    showUpgrade,
+    addMessage,
+    isLoading,
+    sessionId,
+    startNewSession,
+  } = useApp();
   const [inputValue, setInputValue] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [attachments, setAttachments] = useState<
@@ -492,6 +499,25 @@ export function ChatInterface() {
           </div>
         </div>
       </div>
+
+      {/* Upgrade to Premium Banner */}
+      {showUpgrade && (
+        <div className="flex flex-col sm:flex-row justify-center items-center bg-yellow-50 border border-yellow-300 rounded-lg p-3 sm:p-4 mx-2 sm:mx-4 my-2 gap-3 sm:gap-0 shadow text-center">
+          <span className="text-yellow-800 font-semibold mb-2 sm:mb-0 sm:mr-4 text-sm sm:text-base">
+            You have reached the free usage limit. Upgrade to Premium for
+            unlimited access!
+          </span>
+          <Link href="/upgrade" className="w-full sm:w-auto">
+            <Button
+              variant="primary"
+              size="sm"
+              className="w-full sm:w-auto bg-gradient-to-r cursor-pointer from-indigo-500 to-blue-500 text-white font-bold px-4 py-2 rounded-lg shadow hover:from-indigo-600 hover:to-blue-600 transition-all"
+            >
+              Upgrade to Premium
+            </Button>
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
