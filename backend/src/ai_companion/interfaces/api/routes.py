@@ -4,7 +4,7 @@ from io import BytesIO
 from typing import Dict, Optional, List
 from jose import JWTError, jwt
 
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Body, Query, Path, Request
+from fastapi import APIRouter, Response, UploadFile, File, Form, HTTPException, Body, Query, Path, Request
 from fastapi.responses import JSONResponse
 from fastapi.openapi.utils import get_openapi
 from fastapi.openapi.docs import get_swagger_ui_html
@@ -37,19 +37,24 @@ def include_limiter(app):
     app.add_middleware(SlowAPIMiddleware)
 
 # Rate limit error handler
-async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
-    headers = {}
-    retry_after = getattr(exc, "retry_after", None)
-    if retry_after is not None:
-        headers["Retry-After"] = str(retry_after)
-    return JSONResponse(
+async def rate_limit_handler(request: Request, exc: RateLimitExceeded) -> Response:
+    retry_after_seconds = exc.limit.limit.GRANULARITY.seconds
+    
+    response = JSONResponse(
         status_code=429,
-        content={"error": "Too many requests"},
-        headers=headers
+        content={"error": "rate limit exceeded. please try again later.",
+                 "retry_after": retry_after_seconds
+        },
+        headers={"Retry-After": str(retry_after_seconds)}
     )
+    
+    response = request.app.state.limiter._inject_headers(
+        response, request.state.view_rate_limit
+    )
+    return response
 
 # Shared limit for all message-sending endpoints
-message_send_limit = limiter.shared_limit("3/hour", scope="send_messages")
+message_send_limit = limiter.shared_limit("5/hour", scope="send_messages")
 
 
 # Custom key function (e.g., using JWT)
