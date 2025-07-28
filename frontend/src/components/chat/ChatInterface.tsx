@@ -1,24 +1,34 @@
-"use client"
-import React, { useState, useRef, useEffect } from 'react';
-import { useDropzone } from 'react-dropzone';
-import { Mic, PaperclipIcon, Send, X, StopCircle, Trash2 } from 'lucide-react';
+'use client';
+import { useTimer } from '@/app/hooks/hook';
 import { Button } from '@/components/common/Button';
 import { useApp } from '@/contexts/AppContext';
 import { MessageContent } from '@/types';
+import { Mic, PaperclipIcon, Send, StopCircle, X } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useDropzone } from 'react-dropzone';
 import { MessageList } from './MessageList';
-import { useTimer } from '@/app/hooks/hook';
+import Link from 'next/link';
 
-export function ChatInterface() {  
-  const { messages, addMessage, isLoading, sessionId, startNewSession } = useApp();
+export function ChatInterface() {
+  const {
+    messages,
+    showUpgrade,
+    addMessage,
+    isLoading,
+    sessionId,
+    startNewSession,
+  } = useApp();
   const [inputValue, setInputValue] = useState('');
   const [isRecording, setIsRecording] = useState(false);
-  const [attachments, setAttachments] = useState<{ file: File; preview: string; type: string }[]>([]);
+  const [attachments, setAttachments] = useState<
+    { file: File; preview: string; type: string }[]
+  >([]);
   const shouldAttachRef = useRef(false); // Reference to track if we should attach the recording
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   // Scroll to bottom when messages change
@@ -27,9 +37,12 @@ export function ChatInterface() {
   }, [messages]);
 
   // Audio recording states
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
+    null
+  );
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
-  const { duration: recordingDuration, reset: resetTimer } = useTimer(isRecording);
+  const { duration: recordingDuration, reset: resetTimer } =
+    useTimer(isRecording);
   const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
   const [waveformData, setWaveformData] = useState<Uint8Array | null>(null);
@@ -40,16 +53,17 @@ export function ChatInterface() {
 
   // Initialize audio context and analyzer
   const initAudioAnalyzer = async (stream: MediaStream) => {
-    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const audioCtx = new (window.AudioContext ||
+      (window as any).webkitAudioContext)();
     const analyzer = audioCtx.createAnalyser();
     analyzer.fftSize = 256;
-    
+
     const source = audioCtx.createMediaStreamSource(stream);
     source.connect(analyzer);
-    
+
     setAudioContext(audioCtx);
     setAnalyser(analyzer);
-    
+
     // Start waveform visualization
     visualizeWaveform();
   };
@@ -57,45 +71,45 @@ export function ChatInterface() {
   // Visualize waveform
   const visualizeWaveform = () => {
     if (!analyser || !waveformRef.current) return;
-    
+
     const canvas = waveformRef.current;
     const canvasCtx = canvas.getContext('2d');
     if (!canvasCtx) return;
-    
+
     const bufferLength = analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
-    
+
     const draw = () => {
       animationRef.current = requestAnimationFrame(draw);
       analyser.getByteTimeDomainData(dataArray);
       setWaveformData(dataArray);
-      
+
       canvasCtx.fillStyle = 'rgb(200, 200, 200)';
       canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
       canvasCtx.lineWidth = 2;
       canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
       canvasCtx.beginPath();
-      
-      const sliceWidth = canvas.width * 1.0 / bufferLength;
+
+      const sliceWidth = (canvas.width * 1.0) / bufferLength;
       let x = 0;
-      
+
       for (let i = 0; i < bufferLength; i++) {
         const v = dataArray[i] / 128.0;
-        const y = v * canvas.height / 2;
-        
+        const y = (v * canvas.height) / 2;
+
         if (i === 0) {
           canvasCtx.moveTo(x, y);
         } else {
           canvasCtx.lineTo(x, y);
         }
-        
+
         x += sliceWidth;
       }
-      
+
       canvasCtx.lineTo(canvas.width, canvas.height / 2);
       canvasCtx.stroke();
     };
-    
+
     draw();
   };
 
@@ -117,7 +131,9 @@ export function ChatInterface() {
         shouldAttachRef.current = true; // Set to true when starting new recording
 
         // Request microphone access
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
         const recorder = new MediaRecorder(stream);
         let recordingChunks: Blob[] = [];
 
@@ -134,12 +150,16 @@ export function ChatInterface() {
           if (shouldAttachRef.current && recordingChunks.length > 0) {
             const audioBlob = new Blob(recordingChunks, { type: 'audio/wav' });
             const audioUrl = URL.createObjectURL(audioBlob);
-            
-            setAttachments(prev => [{
-              file: new File([audioBlob], 'recording.wav', { type: 'audio/wav' }),
-              preview: audioUrl,
-              type: 'audio'
-            }]);
+
+            setAttachments((prev) => [
+              {
+                file: new File([audioBlob], 'recording.wav', {
+                  type: 'audio/wav',
+                }),
+                preview: audioUrl,
+                type: 'audio',
+              },
+            ]);
           }
 
           // Clean up
@@ -150,7 +170,7 @@ export function ChatInterface() {
           setAudioContext(null);
           setAnalyser(null);
           setWaveformData(null);
-          stream.getTracks().forEach(track => track.stop());
+          stream.getTracks().forEach((track) => track.stop());
           shouldAttachRef.current = false; // Reset for next recording
         };
 
@@ -158,7 +178,6 @@ export function ChatInterface() {
         recorder.start();
         setMediaRecorder(recorder);
         setIsRecording(true);
-
       } catch (error) {
         console.error('Error accessing microphone:', error);
         alert('Could not access microphone. Please check permissions.');
@@ -179,7 +198,7 @@ export function ChatInterface() {
 
     // First stop media tracks to prevent more data
     if (mediaRecorder && mediaRecorder.stream) {
-      mediaRecorder.stream.getTracks().forEach(track => track.stop());
+      mediaRecorder.stream.getTracks().forEach((track) => track.stop());
       mediaRecorder.stop();
     }
 
@@ -211,10 +230,10 @@ export function ChatInterface() {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
         animationRef.current = null;
-      };
+      }
       if (audioContext && audioContext.state !== 'closed') {
         audioContext.close().catch(console.error);
-      };
+      }
     };
   }, [audioContext]);
 
@@ -225,16 +244,16 @@ export function ChatInterface() {
       'application/pdf': ['.pdf'],
     },
     onDrop: (acceptedFiles) => {
-      const newAttachments = acceptedFiles.map(file => {
+      const newAttachments = acceptedFiles.map((file) => {
         const type = file.type.startsWith('image/') ? 'image' : 'pdf';
         return {
           file,
           preview: type === 'image' ? URL.createObjectURL(file) : '',
-          type
+          type,
         };
       });
-      setAttachments(prev => [...prev, ...newAttachments]);
-    }
+      setAttachments((prev) => [...prev, ...newAttachments]);
+    },
   });
 
   // Handle sending a message
@@ -266,46 +285,46 @@ export function ChatInterface() {
     if (attachments.length > 0) {
       // Handle attachments
       const attachment = attachments[0]; // For simplicity, we'll just use the first attachment
-      
+
       if (attachment.type === 'image') {
         content = {
           type: 'image',
           imageFile: attachment.file,
-          text: inputValue || 'Uploaded image'
+          text: inputValue || 'Uploaded image',
         };
       } else if (attachment.type === 'audio') {
         content = {
           type: 'audio',
           audioFile: attachment.file,
-          text: inputValue || ''
+          text: inputValue || '',
         };
       } else {
         content = {
           type: 'pdf',
           pdfUrl: URL.createObjectURL(attachment.file),
           pageCount: 0,
-          text: inputValue || 'Uploaded PDF'
+          text: inputValue || 'Uploaded PDF',
         };
       }
     } else {
       // Text-only message
       content = {
         type: 'conversation',
-        text: inputValue
+        text: inputValue,
       };
     }
 
-    // Add message to context   
+    // Add message to context
     addMessage({
       sender: 'user',
       content,
-      sessionId: currentSessionId
+      sessionId: currentSessionId,
     });
 
     // Reset state
     setInputValue('');
     setAttachments([]);
-    
+
     // Focus input for next message
     if (inputRef.current) {
       inputRef.current.focus();
@@ -322,14 +341,14 @@ export function ChatInterface() {
 
   // Remove an attachment
   const removeAttachment = (index: number) => {
-    setAttachments(prev => {
+    setAttachments((prev) => {
       const newAttachments = [...prev];
-      
+
       // Revoke the object URL to avoid memory leaks
       if (newAttachments[index].preview) {
         URL.revokeObjectURL(newAttachments[index].preview);
       }
-      
+
       newAttachments.splice(index, 1);
       return newAttachments;
     });
@@ -342,7 +361,7 @@ export function ChatInterface() {
         <MessageList messages={messages} isLoading={isLoading} />
         <div ref={messagesEndRef} />
       </div>
-        {/* Attachment preview */}
+      {/* Attachment preview */}
       {attachments.length > 0 && (
         <div className="px-4 py-2 border-t border-gray-200">
           <div className="flex flex-wrap gap-2">
@@ -362,7 +381,9 @@ export function ChatInterface() {
                       <div className="bg-blue-100 p-2 rounded-full mr-2">
                         <Mic className="h-4 w-4 text-blue-600" />
                       </div>
-                      <span className="text-sm">Recording ({formatTime(recordingDuration)})</span>
+                      <span className="text-sm">
+                        Recording ({formatTime(recordingDuration)})
+                      </span>
                     </div>
                     <audio controls src={attachment.preview} className="h-8" />
                   </div>
@@ -382,7 +403,7 @@ export function ChatInterface() {
           </div>
         </div>
       )}
-      
+
       {/* Input area */}
       <div className="border-t border-gray-200 p-4">
         <div
@@ -399,9 +420,9 @@ export function ChatInterface() {
                   Recording: {formatTime(recordingDuration)}
                 </span>
               </div>
-              <canvas 
-                ref={waveformRef} 
-                width="200" 
+              <canvas
+                ref={waveformRef}
+                width="200"
                 height="30"
                 className="w-32 h-8 bg-white rounded"
               />
@@ -415,7 +436,7 @@ export function ChatInterface() {
               </Button>
             </div>
           )}
-          
+
           <div className="flex items-end">
             <div className="flex-1">
               <textarea
@@ -428,7 +449,7 @@ export function ChatInterface() {
                 rows={1}
               />
             </div>
-            
+
             <div className="flex space-x-2 items-center">
               {/* File attachment button */}
               <div {...getRootProps()}>
@@ -443,7 +464,7 @@ export function ChatInterface() {
                   <PaperclipIcon className="h-5 w-5 cursor-pointer" />
                 </Button>
               </div>
-              
+
               {/* Audio recording button */}
               <Button
                 variant="ghost"
@@ -458,14 +479,18 @@ export function ChatInterface() {
                   <Mic className="h-5 w-5 cursor-pointer" />
                 )}
               </Button>
-              
+
               {/* Send button */}
               <Button
                 variant="primary"
                 size="sm"
                 type="button"
                 className="cursor-pointer"
-                disabled={(!inputValue.trim() && attachments.length === 0) || isLoading || isRecording}
+                disabled={
+                  (!inputValue.trim() && attachments.length === 0) ||
+                  isLoading ||
+                  isRecording
+                }
                 onClick={handleSendMessage}
               >
                 <Send className="h-5 w-5" />
@@ -474,7 +499,25 @@ export function ChatInterface() {
           </div>
         </div>
       </div>
+
+      {/* Upgrade to Premium Banner */}
+      {showUpgrade && (
+        <div className="flex flex-col sm:flex-row justify-center items-center bg-yellow-50 border border-yellow-300 rounded-lg p-3 sm:p-4 mx-2 sm:mx-4 my-2 gap-3 sm:gap-0 shadow text-center">
+          <span className="text-yellow-800 font-semibold mb-2 sm:mb-0 sm:mr-4 text-sm sm:text-base">
+            You have reached the free usage limit. Upgrade to Premium for
+            unlimited access!
+          </span>
+          <Link href="/upgrade" className="w-full sm:w-auto">
+            <Button
+              variant="primary"
+              size="sm"
+              className="w-full sm:w-auto bg-gradient-to-r cursor-pointer from-indigo-500 to-blue-500 text-white font-bold px-4 py-2 rounded-lg shadow hover:from-indigo-600 hover:to-blue-600 transition-all"
+            >
+              Upgrade to Premium
+            </Button>
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
-

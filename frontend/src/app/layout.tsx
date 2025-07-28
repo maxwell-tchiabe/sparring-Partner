@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { AppProvider } from '@/contexts/AppContext';
+import { AuthProvider } from '@/contexts/AuthContext';
 import { Navigation } from '@/components/common/Navigation';
 import { NotificationProvider } from '@/contexts/NotificationContext';
 
@@ -24,14 +25,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <AppProvider>
+        <AuthProvider>
           <NotificationProvider>
-            <div className="flex h-screen overflow-hidden">
-              <Navigation />
-              <main className="flex-1 overflow-auto">{children}</main>
-            </div>
+            <AppProvider>
+              <div className="flex h-screen overflow-hidden">
+                <Navigation />
+                <main className="flex-1 overflow-auto">{children}</main>
+              </div>
+            </AppProvider>
           </NotificationProvider>
-        </AppProvider>
+        </AuthProvider>
       </body>
     </html>
   );

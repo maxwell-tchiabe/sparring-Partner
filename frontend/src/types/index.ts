@@ -2,7 +2,6 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  progress: UserProgress;
   role: string;
 }
 
@@ -12,32 +11,30 @@ export interface ChatSession {
   created_at: Date;
 }
 
-export interface UserProgress {
-  vocabulary: VocabularyStats;
-  grammar: GrammarScore;
-  errorHistory: ErrorRecord[];
-  badges: Badge[];
-}
-
-export interface VocabularyStats {
-  learned: number;
-  mastered: number;
-  needsReview: number;
-}
-
-export interface GrammarScore {
-  overall: number; // 0-100
-  categories: {
-    [key: string]: number; // e.g., "presentPerfect": 75
+export interface DashboardStats {
+  vocabulary: {
+    learned: number;
+    total: number;
+  };
+  conversations: {
+    completed: number;
+    total: number;
+  };
+  grammarScore: {
+    current: number;
+    total: number;
+  };
+  weeklyProgress: {
+    daysActive: number;
+    daysTotal: number;
   };
 }
 
-export interface ErrorRecord {
+export interface AIInsight {
   id: string;
-  timestamp: Date;
-  category: string; // e.g., "grammar", "vocabulary", "pronunciation"
-  detail: string;
-  correction: string;
+  type: 'improvement' | 'suggestion' | 'warning';
+  content: string;
+  createdAt: Date;
 }
 
 export interface Badge {
@@ -46,6 +43,14 @@ export interface Badge {
   description: string;
   earnedAt: Date;
   icon: string;
+}
+
+export interface LearningError {
+  id: string;
+  timestamp: Date;
+  category: string;
+  detail: string;
+  correction: string;
 }
 
 export interface Message {
@@ -59,7 +64,7 @@ export interface Message {
   pdf?: string;
 }
 
-export type MessageContent = 
+export type MessageContent =
   | TextContent
   | AudioContent
   | ImageContent

@@ -1,21 +1,30 @@
-import React, { useState } from 'react';
+import { Modal } from '@/components/common/Modal';
 import { useApp } from '@/contexts/AppContext';
 import { useNotification } from '@/contexts/NotificationContext';
+import { deleteChatSession, updateChatSession } from '@/services/api';
 import { formatDistanceToNow, isValid } from 'date-fns';
+import { Check, Edit2, Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { MoreVertical, Edit2, Trash2, Check, X } from 'lucide-react';
-import { Button } from '@/components/common/Button';
-import { Modal } from '@/components/common/Modal';
-import { updateChatSession, deleteChatSession } from '@/services/api';
+import { useState } from 'react';
 
 export const ChatHistory = () => {
-  const { chatHistory, sessionId, setSessionId, setChatHistory, clearMessages } = useApp();
+  const {
+    chatHistory,
+    sessionId,
+    setSessionId,
+    setChatHistory,
+    clearMessages,
+  } = useApp();
   const router = useRouter();
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editTitle, setEditTitle] = useState("");  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const [deleteModalState, setDeleteModalState] = useState<{ isOpen: boolean; sessionId: string | null }>({
+  const [editTitle, setEditTitle] = useState('');
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [deleteModalState, setDeleteModalState] = useState<{
+    isOpen: boolean;
+    sessionId: string | null;
+  }>({
     isOpen: false,
-    sessionId: null
+    sessionId: null,
   });
 
   const handleChatSelect = (selectedSessionId: string) => {
@@ -39,24 +48,27 @@ export const ChatHistory = () => {
       }
 
       await updateChatSession(sessionId, { title: editTitle });
-      
+
       // Update local state immediately
-      const updatedHistory = chatHistory.map(chat => 
+      const updatedHistory = chatHistory.map((chat) =>
         chat._id === sessionId ? { ...chat, title: editTitle } : chat
       );
       setChatHistory(updatedHistory);
       setEditingId(null);
-      
+
       showNotification('success', 'Chat title updated successfully');
     } catch (error) {
       console.error('Failed to update chat title:', error);
-      showNotification('error', 'Failed to update chat title. Please try again.');
+      showNotification(
+        'error',
+        'Failed to update chat title. Please try again.'
+      );
     }
   };
 
   const cancelEdit = () => {
     setEditingId(null);
-    setEditTitle("");
+    setEditTitle('');
   };
   const handleDeleteClick = (sessionId: string) => {
     setDeleteModalState({ isOpen: true, sessionId });
@@ -65,14 +77,19 @@ export const ChatHistory = () => {
   const handleDeleteConfirm = async () => {
     const sessionId = deleteModalState.sessionId;
     if (!sessionId) return;
-    
+
     try {
-      await deleteChatSession(sessionId);      
-      const updatedHistory = chatHistory.filter(chat => chat._id !== sessionId);
+      await deleteChatSession(sessionId);
+      const updatedHistory = chatHistory.filter(
+        (chat) => chat._id !== sessionId
+      );
       setChatHistory(updatedHistory);
-      
+
       // Clear session and messages if we're deleting the current session
-      if (sessionId === window.location.pathname.split('/').pop() || sessionId === sessionId) {
+      if (
+        sessionId === window.location.pathname.split('/').pop() ||
+        sessionId === sessionId
+      ) {
         clearMessages();
         setSessionId('');
         router.push('/chat');
@@ -106,7 +123,7 @@ export const ChatHistory = () => {
   }
 
   return (
-     <div className="h-[calc(100vh-280px)] overflow-y-auto">
+    <div className="h-[calc(100vh-280px)] overflow-y-auto">
       <div className="space-y-2 pb-4">
         {chatHistory.map((session) => (
           <div
@@ -118,7 +135,8 @@ export const ChatHistory = () => {
                 : 'hover:bg-gray-800'
             }`}
           >
-            {editingId === session._id ? (  <div className="flex flex-col gap-2 flex-1">
+            {editingId === session._id ? (
+              <div className="flex flex-col gap-2 flex-1">
                 <input
                   type="text"
                   value={editTitle}
@@ -152,16 +170,24 @@ export const ChatHistory = () => {
               <>
                 <div className="min-w-0 flex-1">
                   <div className="font-medium truncate">{session.title}</div>
-                  <div className={`text-sm truncate ${
-                    sessionId === session._id ? 'text-blue-200' : 'text-gray-500 dark:text-gray-400'
-                  }`}>
+                  <div
+                    className={`text-sm truncate ${
+                      sessionId === session._id
+                        ? 'text-blue-200'
+                        : 'text-gray-500 dark:text-gray-400'
+                    }`}
+                  >
                     {formatDate(session.created_at)}
                   </div>
                 </div>
 
-                <div className={`flex-shrink-0 ${
-                  openMenuId === session._id ? 'visible' : 'invisible group-hover:visible'
-                }`}>
+                <div
+                  className={`flex-shrink-0 ${
+                    openMenuId === session._id
+                      ? 'visible'
+                      : 'invisible group-hover:visible'
+                  }`}
+                >
                   <div className="flex items-center gap-1">
                     <button
                       onClick={(e) => {
@@ -172,7 +198,8 @@ export const ChatHistory = () => {
                     >
                       <Edit2 className="h-4 w-4 cursor-pointer" />
                     </button>
-                    <button                      onClick={(e) => {
+                    <button
+                      onClick={(e) => {
                         e.stopPropagation();
                         handleDeleteClick(session._id);
                       }}
@@ -185,8 +212,9 @@ export const ChatHistory = () => {
               </>
             )}
           </div>
-        ))}      </div>
-      
+        ))}{' '}
+      </div>
+
       {/* Delete Confirmation Modal */}
       <Modal
         isOpen={deleteModalState.isOpen}

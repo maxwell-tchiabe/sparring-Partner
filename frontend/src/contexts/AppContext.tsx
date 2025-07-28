@@ -1,14 +1,26 @@
-"use client"
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, Message, ChatSession } from '@/types';
-import { useParams } from 'react-router-dom';
-import { sendMessage, getMessages, createChatSession, getChatSessions } from '@/services/api';
+'use client';
+import {
+  createChatSession,
+  getChatSessions,
+  getMessages,
+  sendMessage,
+} from '@/services/api';
+import { ChatSession, Message, User } from '@/types';
 import { useRouter } from 'next/navigation';
+import { useNotification } from '@/contexts/NotificationContext';
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 
 interface AppContextType {
   user: User | null;
   messages: Message[];
   isLoading: boolean;
+  showUpgrade: boolean;
   sessionId: string;
   chatHistory: ChatSession[];
   addMessage: (message: Omit<Message, '_id' | 'timestamp'>) => void;
@@ -29,6 +41,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [sessionId, setSessionId] = useState<string>('');
   const [chatHistory, setChatHistory] = useState<ChatSession[]>([]);
   const router = useRouter();
+  const { showNotification } = useNotification();
+  const [showUpgrade, setShowUpgrade] = useState(false);
 
   // Load chat history from API on mount
   useEffect(() => {
@@ -54,12 +68,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     // Check URL for session ID
     const pathSegments = window.location.pathname.split('/');
-    const urlSessionId = pathSegments[2]; 
-    
+    const urlSessionId = pathSegments[2];
+
     if (urlSessionId?.trim()) {
       setSessionId(urlSessionId);
-    } 
-    
+    }
+
     loadChatHistory();
   }, []);
 
@@ -99,18 +113,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
       console.log('Creating new chat session...');
       const newSession = await createChatSession();
       console.log('Created chat session:', newSession);
-      
+
       // Update state
-      setChatHistory(prev => {
+      setChatHistory((prev) => {
         console.log('Updating chat history with new session');
         return [...prev, newSession];
       });
-      
+
       setSessionId(newSession._id);
       console.log('Set session ID to:', newSession._id);
-      
+
       clearMessages();
-      
+
       return newSession._id;
     } catch (error) {
       console.error('Failed to create new session:', error);
@@ -127,24 +141,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     // Add the message first so it shows up immediately in the UI
     setMessages((prev) => [...prev, newMessage]);
-    
+
     // If this is a user message, send it to the API
     if (messageData.sender === 'user') {
       setIsLoading(true);
-      
+
       // Get the path segments to check current route
       const pathSegments = window.location.pathname.split('/');
       const currentSessionIdFromUrl = pathSegments[2];
-      
+
       // Navigate to the chat session if it's the first message or we're not in the correct session
-      if (!currentSessionIdFromUrl || currentSessionIdFromUrl !== messageData.sessionId) {
+      if (
+        !currentSessionIdFromUrl ||
+        currentSessionIdFromUrl !== messageData.sessionId
+      ) {
         console.log('Navigating to session:', messageData.sessionId);
         router.push(`/chat/${messageData.sessionId}`);
       }
-      
-      sendMessage(messageData.sessionId, messageData.content.text || '', messageData.content.audioFile, messageData.content.imageFile)
+
+      sendMessage(
+        messageData.sessionId,
+        messageData.content.text || '',
+        messageData.content.audioFile,
+        messageData.content.imageFile
+      )
         .then(async (response) => {
-          
           setMessages((prev) => [...prev, response]);
           // Refresh chat history to update UI
           const sessions = await getChatSessions();
@@ -152,6 +173,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setIsLoading(false);
         })
         .catch((error) => {
+          showNotification('error', error.message || 'Failed to send message.');
+          if (
+            error.message &&
+            error.message.toLowerCase().includes('too many requests')
+          ) {
+            setShowUpgrade(true);
+          }
           console.error('Failed to send message:', error);
           setIsLoading(false);
         });
@@ -168,6 +196,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         user,
         messages,
         isLoading,
+        showUpgrade,
         sessionId,
         chatHistory,
         addMessage,

@@ -1,7 +1,7 @@
-"use client"
+'use client';
 
+import { AlertCircle, AlertTriangle, CheckCircle, Info, X } from 'lucide-react';
 import React, { useEffect } from 'react';
-import { X, CheckCircle, AlertCircle, AlertTriangle, Info } from 'lucide-react';
 
 export type NotificationType = 'success' | 'error' | 'warning' | 'info';
 
@@ -76,11 +76,10 @@ export const Notification: React.FC<NotificationProps> = ({
         className={`flex items-center gap-3 p-4 rounded-lg shadow-lg border ${getBgColor()} min-w-[320px]`}
       >
         {getIcon()}
-        <p className={`flex-1 text-sm font-medium ${getTextColor()}`}>{message}</p>
-        <button
-          onClick={onClose}
-          className="text-gray-400 hover:text-gray-600"
-        >
+        <p className={`flex-1 text-sm font-medium ${getTextColor()}`}>
+          {message}
+        </p>
+        <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
           <X className="h-5 w-5" />
         </button>
       </div>
