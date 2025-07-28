@@ -6,11 +6,14 @@ export const metadata: Metadata = {
   title: 'Sparring Partner Chat',
 };
 
-export default function ChatSessionPage({
+// Note: The params prop is now a Promise in Next.js 15+
+export default async function ChatSessionPage({
   params,
 }: {
-  params: { sessionId: string };
+  params: Promise<{ sessionId: string }>;
 }) {
+  const { sessionId } = await params;
+
   return (
     <div className="flex flex-col h-screen">
       <header className="bg-white border-b border-gray-200 py-4 px-6">
