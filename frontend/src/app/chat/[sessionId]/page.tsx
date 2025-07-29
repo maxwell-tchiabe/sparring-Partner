@@ -5,8 +5,6 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Sparring Partner Chat',
 };
-
-// Note: The params prop is now a Promise in Next.js 15+
 export default async function ChatSessionPage({
   params,
 }: {
