@@ -102,6 +102,14 @@ export interface PDFContent {
   audioFile?: File;
 }
 
+export interface ErrorRecord {
+  id: string;
+  category: string;
+  detail: string;
+  correction: string;
+  timestamp: Date;
+}
+
 export interface Course {
   id: string;
   title: string;
