@@ -33,6 +33,9 @@ jobs:
         working-directory: ./frontend
         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
 
+      - name: Debug Vercel Env File
+        run: cat .vercel/.env.preview.local || echo "No Vercel env file found"
+
       - name: Build Project Artifacts
         working-directory: ./frontend
         run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
