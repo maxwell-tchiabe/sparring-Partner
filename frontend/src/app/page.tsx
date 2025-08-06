@@ -1,21 +1,10 @@
 'use client';
 import { Button } from '@/components/common/Button';
 import { Layout } from '@/components/layout/Layout';
-import {
-  MessageSquare,
-  BarChart2,
-  Menu,
-  X,
-  Mic,
-  LogIn,
-  LogOut,
-  ArrowRight,
-  Settings,
-} from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { ArrowRight, BarChart2, MessageSquare, Settings } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import Link from 'next/link';
 
 export default function Home() {
   const router = useRouter();
