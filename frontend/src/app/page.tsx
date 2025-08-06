@@ -108,7 +108,7 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <TestimonialCard
               quote="This platform has revolutionized how I learn languages. The real-time feedback is incredibly helpful!"
-              author="Sarah K."
+              author="Sarah B."
               role="Spanish Learner"
             />
             <TestimonialCard
