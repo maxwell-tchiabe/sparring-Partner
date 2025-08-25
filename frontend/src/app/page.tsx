@@ -1,21 +1,10 @@
 'use client';
 import { Button } from '@/components/common/Button';
 import { Layout } from '@/components/layout/Layout';
-import {
-  MessageSquare,
-  BarChart2,
-  Menu,
-  X,
-  Mic,
-  LogIn,
-  LogOut,
-  ArrowRight,
-  Settings,
-} from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { ArrowRight, BarChart2, MessageSquare, Settings } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import Link from 'next/link';
 
 export default function Home() {
   const router = useRouter();
@@ -119,7 +108,7 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <TestimonialCard
               quote="This platform has revolutionized how I learn languages. The real-time feedback is incredibly helpful!"
-              author="Sarah K."
+              author="Sarah B."
               role="Spanish Learner"
             />
             <TestimonialCard
