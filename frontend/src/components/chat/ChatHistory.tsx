@@ -33,8 +33,8 @@ export const ChatHistory = () => {
     router.push(`/chat/${selectedSessionId}`);
   };
 
-  const startEditing = (session: { _id: string; title: string }) => {
-    setEditingId(session._id);
+  const startEditing = (session: { id: string; title: string }) => {
+    setEditingId(session.id);
     setEditTitle(session.title);
     setOpenMenuId(null);
   };
@@ -51,7 +51,7 @@ export const ChatHistory = () => {
 
       // Update local state immediately
       const updatedHistory = chatHistory.map((chat) =>
-        chat._id === sessionId ? { ...chat, title: editTitle } : chat
+        chat.id === sessionId ? { ...chat, title: editTitle } : chat
       );
       setChatHistory(updatedHistory);
       setEditingId(null);
@@ -81,7 +81,7 @@ export const ChatHistory = () => {
     try {
       await deleteChatSession(sessionId);
       const updatedHistory = chatHistory.filter(
-        (chat) => chat._id !== sessionId
+        (chat) => chat.id !== sessionId
       );
       setChatHistory(updatedHistory);
 
@@ -127,15 +127,15 @@ export const ChatHistory = () => {
       <div className="space-y-2 pb-4">
         {chatHistory.map((session) => (
           <div
-            key={session._id}
-            onClick={() => !editingId && handleChatSelect(session._id)}
+            key={session.id}
+            onClick={() => !editingId && handleChatSelect(session.id)}
             className={`group flex items-center justify-between p-3 rounded-lg transition-all duration-200 cursor-pointer ${
-              sessionId === session._id
+              sessionId === session.id
                 ? 'bg-blue-600 text-white shadow-lg'
                 : 'hover:bg-gray-800'
             }`}
           >
-            {editingId === session._id ? (
+            {editingId === session.id ? (
               <div className="flex flex-col gap-2 flex-1">
                 <input
                   type="text"
@@ -149,7 +149,7 @@ export const ChatHistory = () => {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      saveEdit(session._id);
+                      saveEdit(session.id);
                     }}
                     className="px-3 py-1 hover:bg-blue-700 rounded cursor-pointer"
                   >
@@ -172,7 +172,7 @@ export const ChatHistory = () => {
                   <div className="font-medium truncate">{session.title}</div>
                   <div
                     className={`text-sm truncate ${
-                      sessionId === session._id
+                      sessionId === session.id
                         ? 'text-blue-200'
                         : 'text-gray-500 dark:text-gray-400'
                     }`}
@@ -183,7 +183,7 @@ export const ChatHistory = () => {
 
                 <div
                   className={`flex-shrink-0 ${
-                    openMenuId === session._id
+                    openMenuId === session.id
                       ? 'visible'
                       : 'invisible group-hover:visible'
                   }`}
@@ -194,16 +194,16 @@ export const ChatHistory = () => {
                         e.stopPropagation();
                         startEditing(session);
                       }}
-                      className={`p-1.5 rounded-full hover:bg-${sessionId === session._id ? 'blue-700' : 'gray-700'}`}
+                      className={`p-1.5 rounded-full hover:bg-${sessionId === session.id ? 'blue-700' : 'gray-700'}`}
                     >
                       <Edit2 className="h-4 w-4 cursor-pointer" />
                     </button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDeleteClick(session._id);
+                        handleDeleteClick(session.id);
                       }}
-                      className={`p-1.5 rounded-full hover:bg-${sessionId === session._id ? 'blue-700' : 'gray-700'}`}
+                      className={`p-1.5 rounded-full hover:bg-${sessionId === session.id ? 'blue-700' : 'gray-700'}`}
                     >
                       <Trash2 className="h-4 w-4 cursor-pointer" />
                     </button>
