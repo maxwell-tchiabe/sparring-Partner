@@ -1,17 +1,16 @@
 from datetime import datetime, timezone
 from typing import Optional
 from pydantic import BaseModel, Field, ConfigDict
-from bson import ObjectId
-
+import uuid
 
 class ChatSession(BaseModel):
-    """Chat session model for MongoDB storage."""
+    """Chat session model for Supabase storage."""
     model_config = ConfigDict(
         arbitrary_types_allowed=True,
-        populate_by_name=True,
-        json_encoders={ObjectId: str}
+        populate_by_name=True
     )    
-    id: str = Field(default=None, alias="_id")
+    # For Supabase, we need to ensure id is a UUID
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     title: str
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     user_id: str

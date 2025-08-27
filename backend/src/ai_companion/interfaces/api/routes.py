@@ -16,7 +16,8 @@ from ai_companion.graph import graph_builder
 from ai_companion.modules.image import ImageToText
 from ai_companion.modules.speech import SpeechToText, TextToSpeech
 from ai_companion.settings import settings
-from ai_companion.database.mongodb import db
+#from ai_companion.database.mongodb import db
+from ai_companion.database.supabase import db
 from ai_companion.models.message import Message, MessageContent
 from ai_companion.models.chat_session import ChatSession
 
