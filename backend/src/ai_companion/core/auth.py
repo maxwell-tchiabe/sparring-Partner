@@ -44,6 +44,8 @@ def verify_token(token: str) -> Optional[str]:
     Verifies a JWT token and returns the user ID if valid
     """
     try:
+        print(f"JWT_SECRET is {'set' if JWT_SECRET else 'not set'}")  # Debug log
+        print(f"Token extracted: {JWT_SECRET[:10]}...") 
         # Configure JWT decoding for Supabase tokens
         payload = jwt.decode(
             token,
@@ -53,7 +55,14 @@ def verify_token(token: str) -> Optional[str]:
                 "verify_aud": False,  # Supabase includes audience claim
             }
         )
+        print(f"JWT payload decoded successfully. Available claims: {list(payload.keys())}")  # Debug log
+        
         user_id = payload.get("sub") or payload.get("user_id")
+        print(f"Found user_id: {user_id}")  # Debug log
         return str(user_id) if user_id else None
-    except JWTError:
+    except JWTError as je:
+        print(f"JWT Error: {str(je)}")  # Debug log
+        return None
+    except Exception as e:
+        print(f"Unexpected error in verify_token: {str(e)}")  # Debug log
         return None
