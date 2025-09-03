@@ -52,13 +52,8 @@ jobs:
           min-instances: 1
           max-instances: 1
           timeout: 120s
-          volumes:
-            - name: short-term-memory
-              type: in-memory
-              size-limit: 1Gi
-          volume-mounts:
-            - volume: short-term-memory
-              mount-path: /app/data
+          volumes: '{"short-term-memory": {"type": "in-memory", "size-limit": "1Gi"}}'
+          volume-mounts: '{"short-term-memory": "/app/data"}'
           secrets: |
             GROQ_API_KEY=GROQ_API_KEY:latest
             ELEVENLABS_API_KEY=ELEVENLABS_API_KEY:latest
