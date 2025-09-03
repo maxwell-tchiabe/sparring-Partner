@@ -1,0 +1,71 @@
+name: Deploy Backend to Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  LOCATION: ${{ secrets.GCP_REGION }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker to use gcloud credentials
+        run: gcloud auth configure-docker ${{ env.LOCATION }}-docker.pkg.dev
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t ${{ env.LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/sparring-partner-app/app:latest .
+          docker push ${{ env.LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/sparring-partner-app/app:latest
+
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: sparring-partner
+          region: ${{ env.LOCATION }}
+          image: ${{ env.LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/sparring-partner-app/app:latest
+          memory: 4Gi
+          min-instances: 1
+          max-instances: 1
+          timeout: 120s
+          volumes:
+            - name: short-term-memory
+              type: in-memory
+              size-limit: 1Gi
+          volume-mounts:
+            - volume: short-term-memory
+              mount-path: /app/data
+          secrets: |
+            GROQ_API_KEY=GROQ_API_KEY:latest
+            ELEVENLABS_API_KEY=ELEVENLABS_API_KEY:latest
+            ELEVENLABS_VOICE_ID=ELEVENLABS_VOICE_ID:latest
+            TOGETHER_API_KEY=TOGETHER_API_KEY:latest
+            QDRANT_URL=QDRANT_URL:latest
+            QDRANT_API_KEY=QDRANT_API_KEY:latest
+            SUPABASE_URL=SUPABASE_URL:latest
+            SUPABASE_KEY=SUPABASE_KEY:latest
+            SUPABASE_JWT_SECRET=SUPABASE_JWT_SECRET:latest
