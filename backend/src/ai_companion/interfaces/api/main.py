@@ -8,13 +8,7 @@ import argparse
 from typing import Generator, Tuple
 import fastapi
 import numpy as np
-from elevenlabs.client import ElevenLabs
-from elevenlabs import Voice, VoiceSettings
 import os
-from ai_companion.fastrtc_voice_stream.process_elevenlabs_tts import process_elevenlabs_tts
-from ai_companion.fastrtc_voice_stream.voice_assistant_agent import agent, agent_config
-
-
 
 app = FastAPI()
 

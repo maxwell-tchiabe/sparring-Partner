@@ -1,5 +1,5 @@
 # Use an appropriate base image
-FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim
 
 # Install the project into `/app`
 WORKDIR /app
@@ -29,13 +29,12 @@ ENV VIRTUAL_ENV=/app/.venv \
 # Install the package in editable mode
 RUN uv pip install -e .
 
-# Install ffmpeg for video processing
-RUN apt-get update && apt-get install -y ffmpeg libsndfile1 && rm -rf /var/lib/apt/lists/*
-# Define volumes
+# Define volume
 VOLUME ["/app/data"]
 
 # Expose the port
 EXPOSE 8080
 
 # Run the FastAPI app using uvicorn
-CMD ["/app/.venv/bin/fastapi", "run", "ai_companion/interfaces/api/main.py", "--port", "8080", "--host", "0.0.0.0"]
+#CMD ["/app/.venv/bin/fastapi", "run", "ai_companion/interfaces/api/main.py", "--port", "8080", "--host", "0.0.0.0"]
+CMD ["uvicorn", "ai_companion.interfaces.api.main:app", "--host", "0.0.0.0", "--port", "8080"]

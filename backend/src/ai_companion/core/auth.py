@@ -2,17 +2,14 @@ from typing import Optional
 from fastapi import HTTPException, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
-from supabase.client import create_client
 import os
 
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
 JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET")
 
-if not all([SUPABASE_URL, SUPABASE_KEY, JWT_SECRET]):
+if not all([ JWT_SECRET]):
     raise ValueError("Missing Supabase environment variables")
 
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 security = HTTPBearer()
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(security)) -> str:

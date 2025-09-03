@@ -1,0 +1,39 @@
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "build",
+        "-t",
+        "$LOCATION-docker.pkg.dev/$PROJECT_ID/sparring-partner-app/app:latest",
+        "-f",
+        "Dockerfile",
+        ".",
+      ]
+
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "push",
+        "$LOCATION-docker.pkg.dev/$PROJECT_ID/sparring-partner-app/app:latest",
+      ]
+
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: gcloud
+    args:
+      - "run"
+      - "deploy"
+      - "sparring-partner"
+      - "--image=$LOCATION-docker.pkg.dev/$PROJECT_ID/sparring-partner-app/app:latest"
+      - "--port=8080"
+      - "--region=$LOCATION"
+      - "--platform=managed"
+      - "--project=$PROJECT_ID"
+      - "--memory=4Gi"
+      - "--min-instances=1"
+      - "--max-instances=1"
+      - "--timeout=3600"
+      - "--add-volume=name=short-term-memory,type=in-memory,size-limit=1Gi"
+      - "--add-volume-mount=volume=short-term-memory,mount-path=/app/data"
+      - "--update-secrets=GROQ_API_KEY=GROQ_API_KEY:latest,ELEVENLABS_API_KEY=ELEVENLABS_API_KEY:latest,ELEVENLABS_VOICE_ID=ELEVENLABS_VOICE_ID:latest,TOGETHER_API_KEY=TOGETHER_API_KEY:latest,QDRANT_URL=QDRANT_URL:latest,QDRANT_API_KEY=QDRANT_API_KEY:latest,TAVILY_API_KEY=TAVILY_API_KEY:latest,MONGO_URI=MONGO_URI:latest,SUPABASE_URL=SUPABASE_URL:latest,SUPABASE_KEY=SUPABASE_KEY:latest,SUPABASE_JWT_SECRET=SUPABASE_JWT_SECRET:latest"
+images:
+  - "$LOCATION-docker.pkg.dev/$PROJECT_ID/sparring-partner-app/app:latest"

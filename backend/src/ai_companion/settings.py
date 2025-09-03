@@ -12,8 +12,6 @@ class Settings(BaseSettings):
     ELEVENLABS_API_KEY: str
     ELEVENLABS_VOICE_ID: str
     TOGETHER_API_KEY: str
-    TWILIO_ACCOUNT_SID: str
-    TWILIO_AUTH_TOKEN: str
 
     QDRANT_API_KEY: str | None
     QDRANT_URL: str
