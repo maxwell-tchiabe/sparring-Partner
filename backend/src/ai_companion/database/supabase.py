@@ -3,6 +3,7 @@ from typing import List, Optional, Dict, Any
 from ..models.message import Message
 from ..models.chat_session import ChatSession
 from ..settings import settings
+from ..core.helpers import clean_env_var
 import logging
 from datetime import datetime
 
@@ -11,35 +12,49 @@ logger = logging.getLogger(__name__)
 class SupabaseManager:
     def __init__(self):
         self.client: Client = create_client(
-            settings.SUPABASE_URL,
-            settings.SUPABASE_KEY
+            clean_env_var(settings.SUPABASE_URL),
+            clean_env_var(settings.SUPABASE_KEY)
         )
         logger.info("Supabase manager initialized")
 
     async def save_message(self, message: Message) -> Message:
         """Save a new message to the database"""
         try:
+            print(f"[DEBUG] Saving message for session: {message.session_id}")
             message_dict = message.model_dump(by_alias=True)
+            print(f"[DEBUG] Message dict before insert: {message_dict}")
+            
             result = self.client.table("messages").insert(message_dict).execute()
+            print(f"[DEBUG] Message insert result: {result}")
             
             if not result.data:
+                print(f"[ERROR] No data returned from message insert operation")
                 raise RuntimeError("Failed to save message")
             
             # Update chat session title based on first user message
             if message.sender == "user":
+                print(f"[DEBUG] Checking message count for session {message.session_id}")
                 messages_count = len(self.client.table("messages")
                     .select("id")
                     .eq("session_id", message.session_id)
                     .execute().data)
+                print(f"[DEBUG] Message count for session: {messages_count}")
                 
                 if messages_count == 1:
+                    print(f"[DEBUG] First message in session, updating title")
                     title = message.content.text[:30] + "..." if len(message.content.text) > 30 else message.content.text
-                    self.client.table("chat_sessions").update({"title": title}).eq("id", message.session_id).execute()
+                    title = "".join(char for char in title if char.isprintable())  # Clean title
+                    print(f"[DEBUG] New title: {repr(title)}")
+                    update_result = self.client.table("chat_sessions").update({"title": title}).eq("id", message.session_id).execute()
+                    print(f"[DEBUG] Title update result: {update_result}")
             
-            return Message(**result.data[0])
+            saved_message = Message(**result.data[0])
+            print(f"[DEBUG] Successfully saved message with ID: {saved_message.id}")
+            return saved_message
             
         except Exception as e:
-            logger.error(f"Error saving message: {str(e)}")
+            print(f"[ERROR] Error saving message: {str(e)}")
+            print(f"[ERROR] Message data that caused error: {vars(message)}")
             raise RuntimeError(f"Failed to save message: {str(e)}")
 
     async def get_messages(self, session_id: str, limit: int = 50) -> List[Message]:
@@ -51,12 +66,12 @@ class SupabaseManager:
             if limit < 1:
                 raise ValueError("limit must be a positive integer")
 
-            result = self.client.table("messages") \
-                .select("*") \
-                .eq("session_id", session_id) \
-                .order("timestamp", desc=False) \
-                .limit(limit) \
-                .execute()
+            result = (self.client.table("messages")
+                .select("*")
+                .eq("session_id", session_id)
+                .order("timestamp", desc=False)
+                .limit(limit)
+                .execute())
             
             return [Message(**msg) for msg in result.data]
             
@@ -68,11 +83,11 @@ class SupabaseManager:
     async def get_message(self, message_id: str) -> Optional[Message]:
         """Retrieve a specific message by ID"""
         try:
-            result = self.client.table("messages") \
-                .select("*") \
-                .eq("id", message_id) \
-                .single() \
-                .execute()
+            result = (self.client.table("messages")
+                .select("*")
+                .eq("id", message_id)
+                .single()
+                .execute())
             
             return Message(**result.data) if result.data else None
             
@@ -83,16 +98,30 @@ class SupabaseManager:
     async def create_chat_session(self, session: ChatSession) -> ChatSession:
         """Create a new chat session"""
         try:
+            print(f"[DEBUG] Creating chat session with ID: {session.id}")
+            print(f"[DEBUG] Original title: {repr(session.title)}")
+            
+            # Clean the title field to remove any non-printable characters
+            session.title = "".join(char for char in session.title if char.isprintable())
+            print(f"[DEBUG] Cleaned title: {repr(session.title)}")
+            
             session_dict = session.model_dump(by_alias=True)
+            print(f"[DEBUG] Session dict before insert: {session_dict}")
+            
             result = self.client.table("chat_sessions").insert(session_dict).execute()
+            print(f"[DEBUG] Insert result: {result}")
             
             if not result.data:
+                print(f"[ERROR] No data returned from insert operation")
                 raise RuntimeError("Failed to create chat session")
-                
-            return ChatSession(**result.data[0])
+            
+            created_session = ChatSession(**result.data[0])
+            print(f"[DEBUG] Successfully created chat session: {created_session}")
+            return created_session
             
         except Exception as e:
-            logger.error(f"Error creating chat session: {str(e)}")
+            print(f"[ERROR] Error creating chat session: {str(e)}")
+            print(f"[ERROR] Session data that caused error: {vars(session)}")
             raise RuntimeError(f"Failed to create chat session: {str(e)}")
 
     async def get_chat_sessions(self, user_id: Optional[str] = None, limit: int = 50) -> List[ChatSession]:
@@ -113,11 +142,11 @@ class SupabaseManager:
     async def get_chat_session(self, session_id: str) -> Optional[ChatSession]:
         """Get a single chat session by ID"""
         try:
-            result = self.client.table("chat_sessions") \
-                .select("*") \
-                .eq("id", session_id) \
-                .single() \
-                .execute()
+            result = (self.client.table("chat_sessions")
+                .select("*")
+                .eq("id", session_id)
+                .single()
+                .execute())
             
             return ChatSession(**result.data) if result.data else None
             
@@ -128,10 +157,10 @@ class SupabaseManager:
     async def update_chat_session(self, session_id: str, update_data: dict) -> bool:
         """Update a chat session"""
         try:
-            result = self.client.table("chat_sessions") \
-                .update(update_data) \
-                .eq("id", session_id) \
-                .execute()
+            result = (self.client.table("chat_sessions")
+                .update(update_data)
+                .eq("id", session_id)
+                .execute())
             
             return bool(result.data)
             
@@ -143,16 +172,16 @@ class SupabaseManager:
         """Delete a chat session and all its messages"""
         try:
             # Delete all messages in the session first
-            self.client.table("messages") \
-                .delete() \
-                .eq("session_id", session_id) \
-                .execute()
+            (self.client.table("messages")
+                .delete()
+                .eq("session_id", session_id)
+                .execute())
             
             # Then delete the session
-            result = self.client.table("chat_sessions") \
-                .delete() \
-                .eq("id", session_id) \
-                .execute()
+            result = (self.client.table("chat_sessions")
+                .delete()
+                .eq("id", session_id)
+                .execute())
             
             return bool(result.data)
             
