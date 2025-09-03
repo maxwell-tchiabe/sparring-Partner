@@ -1,7 +1,4 @@
 import { BackgroundCircleProvider } from '@/components/background-circle-provider';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { ResetChat } from '@/components/ui/reset-chat';
-import { ThemeProvider } from '@/components/theme-provider';
 import { ThemeTransition } from '@/components/ui/theme-transition';
 
 export default function VoicePage() {
