@@ -11,6 +11,8 @@ from together import Together
 from ai_companion.core.exceptions import TextToImageError
 from ai_companion.core.prompts import IMAGE_ENHANCEMENT_PROMPT, IMAGE_SCENARIO_PROMPT
 from ai_companion.settings import settings
+from ai_companion.core.helpers import clean_env_var
+
 
 
 class ScenarioPrompt(BaseModel):
@@ -56,7 +58,7 @@ class TextToImage:
     def together_client(self) -> Together:
         """Get or create Together client instance using singleton pattern."""
         if self._together_client is None:
-            self._together_client = Together(api_key=settings.TOGETHER_API_KEY)
+            self._together_client = Together(api_key=clean_env_var(settings.TOGETHER_API_KEY))
         return self._together_client
 
     async def generate_image(self, prompt: str, output_path: str = "") -> bytes:
@@ -101,7 +103,7 @@ class TextToImage:
 
             llm = ChatGroq(
                 model=settings.TEXT_MODEL_NAME,
-                api_key=settings.GROQ_API_KEY,
+                api_key=clean_env_var(settings.GROQ_API_KEY),
                 temperature=0.4,
                 max_retries=2,
             )
@@ -131,7 +133,7 @@ class TextToImage:
 
             llm = ChatGroq(
                 model=settings.TEXT_MODEL_NAME,
-                api_key=settings.GROQ_API_KEY,
+                api_key=clean_env_var(settings.GROQ_API_KEY),
                 temperature=0.25,
                 max_retries=2,
             )

@@ -23,7 +23,7 @@ interface AppContextType {
   showUpgrade: boolean;
   sessionId: string;
   chatHistory: ChatSession[];
-  addMessage: (message: Omit<Message, '_id' | 'timestamp'>) => void;
+  addMessage: (message: Omit<Message, 'id' | 'timestamp'>) => void;
   clearMessages: () => void;
   setUser: (user: User | null) => void;
   fetchMessages: (sid: string) => Promise<void>;
@@ -120,22 +120,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return [...prev, newSession];
       });
 
-      setSessionId(newSession._id);
-      console.log('Set session ID to:', newSession._id);
+      setSessionId(newSession.id);
+      console.log('Set session ID to:', newSession.id);
 
       clearMessages();
 
-      return newSession._id;
+      return newSession.id;
     } catch (error) {
       console.error('Failed to create new session:', error);
       throw error;
     }
   };
 
-  const addMessage = (messageData: Omit<Message, '_id' | 'timestamp'>) => {
+  const addMessage = (messageData: Omit<Message, 'id' | 'timestamp'>) => {
     const newMessage: Message = {
       ...messageData,
-      _id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+      id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
       timestamp: new Date(),
     };
 

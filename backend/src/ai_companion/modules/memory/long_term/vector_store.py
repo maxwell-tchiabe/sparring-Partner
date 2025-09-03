@@ -9,6 +9,8 @@ from qdrant_client.models import Distance, VectorParams, PointStruct
 from sentence_transformers import SentenceTransformer
 
 from ai_companion.settings import settings
+from ai_companion.core.helpers import clean_env_var
+
 
 
 @dataclass
@@ -50,7 +52,7 @@ class VectorStore:
             self._validate_env_vars()
             self.model = SentenceTransformer(self.EMBEDDING_MODEL)
             self.client = QdrantClient(
-                url=settings.QDRANT_URL, api_key=settings.QDRANT_API_KEY
+                url=clean_env_var(settings.QDRANT_URL), api_key=clean_env_var(settings.QDRANT_API_KEY)
             )
             self._initialized = True
 
