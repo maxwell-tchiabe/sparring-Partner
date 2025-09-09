@@ -9,14 +9,17 @@ import {
   Menu,
   MessageSquare,
   Mic,
+  MoreVertical,
   Plus,
+  Send,
   Settings,
+  Smartphone,
   User,
   X,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export function Navigation() {
   const pathname = usePathname();
@@ -25,6 +28,8 @@ export function Navigation() {
   const { user, userRole, signOut } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isProfileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
 
   // Check if mobile view on mount and resize
   useEffect(() => {
@@ -41,6 +46,22 @@ export function Navigation() {
     window.addEventListener('resize', checkIfMobile);
     return () => window.removeEventListener('resize', checkIfMobile);
   }, []);
+
+  // Close profile menu on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        profileMenuRef.current &&
+        !profileMenuRef.current.contains(event.target as Node)
+      ) {
+        setProfileMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [profileMenuRef]);
 
   // Don't render navigation on home or login pages
   if (pathname === '/' || pathname === '/login') {
@@ -85,6 +106,9 @@ export function Navigation() {
       adminOnly: true,
     },
   ];
+
+  const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
+  const userInitials = (userName[0] || '').toUpperCase();
 
   return (
     <>
@@ -150,25 +174,64 @@ export function Navigation() {
           </div>
         </div>
 
-        <div className="flex-shrink-0 p-4 border-t border-gray-800">
-          {user ? (
-            <div className="space-y-2">
-              <div className="flex items-center mb-2">
-                <div className="h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center mr-3">
-                  <User className="h-4 w-4" />
-                </div>
-                <div>
-                  <p className="text-sm">{user.email}</p>
-                </div>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="w-full flex cursor-pointer items-center px-4 py-2 text-gray-300 hover:bg-gray-800 rounded-md transition-colors"
-              >
-                <LogOut className="mr-3 h-5 w-5" />
-                <span>Logout</span>
-              </button>
+        {/* User Profile Section */}
+        <div ref={profileMenuRef} className="relative p-4 border-t border-gray-800">
+          {isProfileMenuOpen && (
+            <div className="absolute bottom-full mb-2 w-[calc(100%-2rem)] bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+              <ul className="text-sm text-gray-300">
+                <li>
+                  <Link
+                    href="#"
+                    className="flex items-center px-4 py-3 hover:bg-gray-700 transition-colors"
+                  >
+                    <Smartphone className="w-5 h-5 mr-3" />
+                    <span>Download mobile App</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/settings"
+                    className="flex items-center px-4 py-3 hover:bg-gray-700 transition-colors"
+                  >
+                    <Settings className="w-5 h-5 mr-3" />
+                    <span>Settings</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/contact"
+                    className="flex items-center px-4 py-3 hover:bg-gray-700 transition-colors"
+                  >
+                    <Send className="w-5 h-5 mr-3" />
+                    <span>Contact us</span>
+                  </Link>
+                </li>
+                <li>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center px-4 py-3 bg-gray-700/50 hover:bg-gray-700 transition-colors text-left"
+                  >
+                    <LogOut className="w-5 h-5 mr-3" />
+                    <span>Log out</span>
+                  </button>
+                </li>
+              </ul>
             </div>
+          )}
+
+          {user ? (
+            <button
+              onClick={() => setProfileMenuOpen((prev) => !prev)}
+              className="w-full flex items-center text-left rounded-md hover:bg-gray-800 p-2 transition-colors"
+            >
+              <div className="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-white">
+                {userInitials}
+              </div>
+              <div className="flex-1 min-w-0 ml-3">
+                <p className="text-sm font-medium truncate">{userName}</p>
+              </div>
+              <MoreVertical className="w-5 h-5 text-gray-400 ml-2 flex-shrink-0" />
+            </button>
           ) : (
             <Link
               href="/login"
