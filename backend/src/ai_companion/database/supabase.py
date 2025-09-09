@@ -25,7 +25,7 @@ class SupabaseManager:
             print(f"[DEBUG] Message dict before insert: {message_dict}")
             
             result = self.client.table("messages").insert(message_dict).execute()
-            print(f"[DEBUG] Message insert result: {result}")
+            print(f"[DEBUG] Message insert results: {result}")
             
             if not result.data:
                 print(f"[ERROR] No data returned from message insert operation")
