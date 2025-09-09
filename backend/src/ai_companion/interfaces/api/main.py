@@ -44,7 +44,7 @@ async def auth_middleware(request: Request, call_next):
         request.state.user_id = user_id
         return await call_next(request)
     except Exception as e:
-        print(f"Auth middleware error: {str(e)}")  # Debug log
+        print(f"Auth middleware error: {str(e)}")  
         return JSONResponse(
             status_code=401,
             content={"detail": str(e)}
