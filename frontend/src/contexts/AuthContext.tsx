@@ -1,5 +1,5 @@
-'use client';
-
+"use client"
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { supabase } from '@/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { jwtDecode, JwtPayload } from 'jwt-decode';
@@ -94,7 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading ? children : <div>Loading...</div>}
+      {!loading ? children : <LoadingSpinner />}
     </AuthContext.Provider>
   );
 }
