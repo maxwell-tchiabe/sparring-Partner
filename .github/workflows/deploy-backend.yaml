@@ -55,7 +55,7 @@ jobs:
             --memory=4Gi
             --min-instances=1
             --max-instances=1
-            --timeout=3600
+            --timeout=120
             --add-volume=name=short-term-memory,type=in-memory,size-limit=1Gi
             --add-volume-mount=volume=short-term-memory,mount-path=/app/data
             --allow-unauthenticated
