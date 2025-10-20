@@ -55,7 +55,7 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded) -> Respon
     return response
 
 # Shared limit for all message-sending endpoints
-message_send_limit = limiter.shared_limit("5/hour", scope="send_messages")
+message_send_limit = limiter.shared_limit("50/hour", scope="send_messages")
 
 
 # Custom key function (e.g., using JWT)
