@@ -108,7 +108,7 @@ async def create_chat_session(request: Request):
         stored_session = await db.create_chat_session(session)
         return stored_session
     except Exception as e:
-        logger.error(f"Error creating chat session: {e}", exc_info=True)
+        logger.error(f"Error while creating chat session: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 @chat_router.get("/api/chat-sessions",
