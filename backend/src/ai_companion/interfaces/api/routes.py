@@ -104,7 +104,7 @@ async def create_chat_session(request: Request):
     """Create a new chat session"""
     try:
         user_id = request.state.user_id
-        session = ChatSession(title="New Chat", user_id=user_id)
+        session = ChatSession(title="New Chat Session", user_id=user_id)
         stored_session = await db.create_chat_session(session)
         return stored_session
     except Exception as e:
