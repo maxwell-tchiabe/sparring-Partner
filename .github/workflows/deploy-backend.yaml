@@ -39,15 +39,15 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          docker build -t ${{ env.LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/sparring-partner-app/app:latest .
-          docker push ${{ env.LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/sparring-partner-app/app:latest
+          docker build -t ${{ env.LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/sparring-partner/app:latest .
+          docker push ${{ env.LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/sparring-partner/app:latest
 
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: sparring-partner
           region: ${{ env.LOCATION }}
-          image: ${{ env.LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/sparring-partner-app/app:latest
+          image: ${{ env.LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/sparring-partner/app:latest
           flags: |
             --port=8080
             --platform=managed
