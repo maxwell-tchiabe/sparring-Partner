@@ -1,0 +1,63 @@
+%% Request Flow Diagram for GET /api/chat-sessions
+
+sequenceDiagram
+    participant Client as Client (Next.js)
+    participant Router as FastAPI Router
+    participant Auth as Auth Middleware
+    participant Controller as Controller Function
+    participant Model as ChatSession Model
+    participant DB as Supabase DB
+    
+    Note over Client,DB: Flow of GET /api/chat-sessions Request
+
+    Client->>Router: GET /api/chat-sessions
+    Note right of Client: With Authorization header
+
+    Router->>Auth: Check authentication
+    Note right of Router: Middleware intercepts request
+    Auth-->>Router: Validated user_id
+
+    Router->>Controller: Execute get_chat_sessions()
+    Note right of Router: Route handler function
+
+    Controller->>Model: Validate request format
+    Note right of Controller: Using Pydantic model
+
+    Controller->>DB: Query chat sessions
+    Note right of Controller: Using Supabase client
+    DB-->>Controller: List of sessions
+
+    Controller->>Model: Format response data
+    Note right of Controller: Convert to ChatSession objects
+
+    Controller-->>Router: Return formatted sessions
+    Router-->>Client: JSON Response
+    Note left of Client: List of chat sessions
+
+%% Detailed component view
+flowchart TB
+    subgraph Request["GET /api/chat-sessions"]
+        direction TB
+        C[Client Request]
+        R[FastAPI Router]
+        A[Auth Middleware]
+        F[Controller Function]
+        M[ChatSession Model]
+        D[(Supabase DB)]
+
+        C -->|1. HTTP GET| R
+        R -->|2. Verify Token| A
+        A -->|3. Add user_id| F
+        F -->|4. Validate| M
+        F -->|5. Query| D
+        D -->|6. Return Data| F
+        F -->|7. Format| M
+        F -->|8. Response| C
+    end
+
+    style C fill:#87CEEB,stroke:#333,stroke-width:2px
+    style R fill:#98FB98,stroke:#333,stroke-width:2px
+    style A fill:#FFB6C1,stroke:#333,stroke-width:2px
+    style F fill:#DDA0DD,stroke:#333,stroke-width:2px
+    style M fill:#F0E68C,stroke:#333,stroke-width:2px
+    style D fill:#20B2AA,stroke:#333,stroke-width:2px

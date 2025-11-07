@@ -55,7 +55,7 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded) -> Respon
     return response
 
 # Shared limit for all message-sending endpoints
-message_send_limit = limiter.shared_limit("5/hour", scope="send_messages")
+message_send_limit = limiter.shared_limit("50/hour", scope="send_messages")
 
 
 # Custom key function (e.g., using JWT)
@@ -104,7 +104,7 @@ async def create_chat_session(request: Request):
     """Create a new chat session"""
     try:
         user_id = request.state.user_id
-        session = ChatSession(title="New Chat", user_id=user_id)
+        session = ChatSession(title="New Chat Session", user_id=user_id)
         stored_session = await db.create_chat_session(session)
         return stored_session
     except Exception as e:

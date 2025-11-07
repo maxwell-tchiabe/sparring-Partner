@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from fastapi.security import HTTPBearer
 from ai_companion.interfaces.api.routes import chat_router, include_limiter
 from fastapi.middleware.cors import CORSMiddleware
 from ai_companion.core.auth import verify_token
@@ -10,18 +11,28 @@ import fastapi
 import numpy as np
 import os
 
-app = FastAPI()
+app = FastAPI(
+    title="AI Companion API",
+    description="API for AI Companion application",
+    version="1.0.0",
+    openapi_url="/openapi.json",
+    docs_url="/docs"
+)
+security = HTTPBearer()
 
 @app.middleware("http")
 async def auth_middleware(request: Request, call_next):
     # Skip auth for specific endpoints
-    if request.url.path in ["/api/health", "/docs", "/redoc", "/openapi.json"]:
+    # Allow unauthenticated access to health and docs (and their subpaths/static assets)
+    public_prefixes = ("/api/health", "/docs", "/redoc", "/openapi.json", "/static", "/favicon.ico")
+    if any(request.url.path.startswith(p) for p in public_prefixes):
         return await call_next(request)
 
     try:
-        auth_header = request.headers.get("Authorization")        
+        auth_header = request.headers.get("Authorization")
         if not auth_header:
-            print("No Authorization header found")  # Debug log
+            # No Authorization provided
+            print(f"Auth middleware: missing Authorization header for path {request.url.path}")  # Debug log
             return JSONResponse(
                 status_code=401,
                 content={"details": "No valid authentication token provided."}

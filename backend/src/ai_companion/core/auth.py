@@ -44,8 +44,8 @@ def verify_token(token: str) -> Optional[str]:
     Verifies a JWT token and returns the user ID if valid
     """
     try:
-        print(f"JWT_SECRET is {'set' if JWT_SECRET else 'not set'}")  # Debug log
-        print(f"Token extracted: {JWT_SECRET[:10]}...") 
+        # Avoid printing secrets or full tokens in logs
+        print(f"JWT_SECRET is {'set' if JWT_SECRET else 'not set'}")  # Debug log (not the secret value)
         # Configure JWT decoding for Supabase tokens
         payload = jwt.decode(
             token,

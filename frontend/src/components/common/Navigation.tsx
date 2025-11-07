@@ -68,10 +68,10 @@ export function Navigation() {
     return null;
   }
 
-  const handleNewChat = () => {
-    startNewSession();
-    router.push('/chat');
-    if (isMobile) setIsOpen(false); // Close nav on mobile after selection
+  const handleNewChat = async () => {
+    const sessionId = await startNewSession();
+    router.push(`/chat/${sessionId}`);
+    if (isMobile) setIsOpen(false); 
   };
 
   const handleLogout = async () => {

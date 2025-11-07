@@ -18,8 +18,6 @@ class Message(BaseModel):
     model_config = ConfigDict(
         arbitrary_types_allowed=True,
         populate_by_name=True
-        # Remove: Not needed for Supabase as it uses UUID
-        # json_encoders={ObjectId: str}
     )
 
     # For Supabase, we need to ensure id is a UUID
@@ -27,8 +25,6 @@ class Message(BaseModel):
     session_id: str
     sender: Literal["user", "assistant"]
     content: MessageContent
-    # Note: Supabase will automatically handle timestamp with created_at
-    # but we keep this for application logic
     timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     audio: Optional[str] = None
     image: Optional[str] = None
