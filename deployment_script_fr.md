@@ -267,3 +267,55 @@ jobs:
 **[MUSIQUE DYNAMIQUE QUI REPREND]**
 
 **[OUTRO : Animation avec les liens vers les réseaux sociaux et un bouton d'abonnement.]**
+
+---
+
+### SEO & Métadonnées pour YouTube
+
+**Keywords (Mots-clés Simples)**:
+1.  Déploiement
+2.  Frontend
+3.  Vercel
+4.  CI/CD
+5.  GitHub Actions
+6.  Next.js
+7.  React
+8.  Tutoriel
+9.  Hébergement
+10. Développeur
+
+**Keyword Phrases (Phrases Clés)**:
+1.  Déploiement frontend de A à Z
+2.  Mettre en ligne un site web
+3.  Tutoriel déploiement pour débutants
+4.  CI/CD avec GitHub Actions
+5.  Déployer une application Next.js
+6.  Hébergement web pour frontend
+7.  Variables d'environnement Vercel
+8.  Configurer un nom de domaine
+9.  Déploiement continu facile
+10. De localhost à production
+
+---
+
+**Titre de la Vidéo (pour YouTube)**:
+Tutoriel : Déployer son Site Frontend (Next.js/React) de A à Z avec Vercel & CI/CD (GitHub Actions)
+
+**Titre pour la Miniature (plus court et percutant)**:
+DÉPLOIEMENT FACILE
+De Localhost à Production
+
+---
+
+**Description de la Vidéo**:
+Apprenez le déploiement frontend de A à Z dans ce tutoriel complet pour développeurs débutants. Nous allons mettre en ligne un site web (application Next.js / React) en utilisant Vercel pour un hébergement web simple et puissant. Découvrez comment automatiser votre workflow avec une CI/CD utilisant GitHub Actions, protéger vos clés API avec les variables d'environnement sur Vercel, et configurer votre propre nom de domaine. Passez de localhost à production comme un pro ! Ce guide couvre tout ce qu'il faut savoir sur le déploiement continu facile.
+
+---
+
+**Tags pour YouTube (séparés par des virgules)**:
+
+**Avec #**:
+, #Netlify, #CICD, #GitHubActions, #NextJS, #ReactJS, #Tutoriel, #DeploiementFrontend, #Developpeur, #MettreEnLigne, #DeploiementContinu, #Programmation, #DeveloppementWeb
+
+**Sans #**:
+Déploiement, Frontend, Vercel, Netlify, CI/CD, GitHub Actions, Next.js, React.js, Tutoriel, Deploiement Frontend, Développeur, Mettre en ligne, Déploiement Continu, Programmation, Développement Web
