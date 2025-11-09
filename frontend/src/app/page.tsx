@@ -28,7 +28,7 @@ export default function Home() {
           <div className="flex flex-col md:flex-row items-center">
             <div className="md:w-1/2 mb-10 md:mb-0">
               <h1 className="text-4xl md:text-5xl font-bold mb-6">
-                test preview deployment
+                AI-Powered Language Learning Assistant
               </h1>
               <p className="text-xl mb-8 text-blue-100">
                 A multimodal platform for personalized language learning with
