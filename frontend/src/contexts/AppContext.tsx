@@ -50,7 +50,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       try {
         const sessions = await getChatSessions();
         setChatHistory(sessions);
-        console.log('Chat history loaded:', sessions);
       } catch (error) {
         console.error('Failed to fetch chat history:', error);
       }
@@ -91,7 +90,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setIsLoading(true);
       const fetchedMessages = await getMessages(sid);
       setMessages(fetchedMessages);
-      console.log('Fetched messages:', fetchedMessages);
     } catch (error) {
       console.error('Failed to fetch messages:', error);
       setMessages([]);
@@ -103,7 +101,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Load messages when session changes
   useEffect(() => {
     if (sessionId) {
-      console.log('Fetching messages for session:', sessionId);
       fetchMessages(sessionId);
     }
   }, [sessionId]);
@@ -112,17 +109,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try {
       console.log('Creating new chat session...');
       const newSession = await createChatSession();
-      console.log('Created chat session:', newSession);
 
       // Update state
       setChatHistory((prev) => {
-        console.log('Updating chat history with new session');
         return [...prev, newSession];
       });
 
       setSessionId(newSession.id);
-      console.log('Set session ID to:', newSession.id);
-
       clearMessages();
 
       return newSession.id;
@@ -173,14 +166,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setIsLoading(false);
         })
         .catch((error) => {
-          showNotification('error', error.message || 'Failed to send message.');
+          showNotification('error', 'Failed to send message.');
           if (
             error.message &&
             error.message.toLowerCase().includes('too many requests')
           ) {
             setShowUpgrade(true);
           }
-          console.error('Failed to send message:', error);
           setIsLoading(false);
         });
     }
