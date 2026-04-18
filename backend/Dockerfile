@@ -1,5 +1,5 @@
 # Use an appropriate base image
-FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim
 
 # Install the project into `/app`
 WORKDIR /app
