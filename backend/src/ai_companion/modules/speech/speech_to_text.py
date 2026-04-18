@@ -6,6 +6,7 @@ from groq import Groq
 
 from ai_companion.core.exceptions import SpeechToTextError
 from ai_companion.settings import settings
+from ai_companion.core.helpers import clean_env_var
 
 
 class SpeechToText:
@@ -31,7 +32,7 @@ class SpeechToText:
     def client(self) -> Groq:
         """Get or create Groq client instance using singleton pattern."""
         if self._client is None:
-            self._client = Groq(api_key=settings.GROQ_API_KEY)
+            self._client = Groq(api_key=clean_env_var(settings.GROQ_API_KEY))
         return self._client
 
     async def transcribe(self, audio_data: bytes) -> str:

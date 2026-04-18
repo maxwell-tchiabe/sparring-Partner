@@ -1,0 +1,91 @@
+%% Architecture diagram for AI Companion (Mermaid)
+
+%% System architecture (flow)
+flowchart LR
+    subgraph Frontend
+        FW[Next.js frontend]
+    end
+
+    subgraph Backend
+        BE["FastAPI app"]
+        Auth["Auth middleware<br/>(verify_token JWT)"]
+            %% Detailed API endpoints
+            subgraph API_Routes["/api/* routes"]
+                CS_POST[["POST /api/chat-sessions\nreturns: ChatSession"]]
+                CS_GET[["GET /api/chat-sessions\nreturns: List[ChatSession]"]]
+                CS_PATCH[["PATCH /api/chat-sessions/{id}\nreturns: {status,message}"]]
+                CS_DEL[["DELETE /api/chat-sessions/{id}\nreturns: {status,message}"]]
+                CHAT_POST[["POST /api/chat\nreturns: assistant response (json)"]]
+                MSG_GET[["GET /api/messages/{session_id}\nreturns: List[Message]"]]
+                HEALTH_GET[["GET /api/health\nreturns: {status:'ok'}"]]
+            end
+        Modules(("Speech, Image, TTS"))
+        Graph["Graph Agent<br/>(langgraph)"]
+        STM["Short-term memory<br/>(SQLite)"]
+    end
+
+    subgraph Database
+        DB(("Supabase/Postgres"))
+    end
+
+    FW -->|HTTP| BE
+    BE --> Auth
+    Auth --> Routes
+    API_Routes --> Modules
+    API_Routes --> Graph
+    Graph --> STM
+    API_Routes --> DB
+    DB -->|CRUD| API_Routes
+    STM -->|context| Graph
+    Modules --> Routes
+
+%% Sequence diagram: handling a chat message
+
+sequenceDiagram
+    participant F as Frontend
+    participant B as Backend
+    participant A as Auth
+    participant D as Database
+    participant G as Graph
+    participant S as ShortTermMemory
+    participant M as Modules
+
+    F->>B: POST /api/chat (message/audio/image)
+    B->>A: verify_token(header)
+    A-->>B: user_id
+    B->>D: get_chat_session(session_id)
+    D-->>B: session (user_id)
+    B->>D: save_message(user message)
+    B->>G: invoke graph with message (using S)
+    G->>S: load/save context
+    G-->>B: output_state (workflow, messages, audio_buffer)
+    B->>D: save_message(assistant message)
+    B-->>F: 200 OK + assistant response
+
+%% DB schema (simplified)
+
+erDiagram
+    USERS {
+        uuid id PK
+        string email
+        string hashed_password
+        timestamptz created_at
+    }
+    CHAT_SESSIONS {
+        uuid id PK
+        string title
+        uuid user_id FK
+        timestamptz created_at
+    }
+    MESSAGES {
+        uuid id PK
+        uuid session_id FK
+        string sender
+        json content
+        text audio_base64 NULL
+        text image_base64 NULL
+        timestamptz created_at
+    }
+
+    USERS ||--o{ CHAT_SESSIONS : owns
+    CHAT_SESSIONS ||--o{ MESSAGES : contains
