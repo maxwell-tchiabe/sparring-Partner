@@ -9,9 +9,12 @@ services:
       - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
       - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
       - "--entrypoints.websecure.address=:443"
-      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.dnschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.dnschallenge.provider=cloudflare"
       - "--certificatesresolvers.myresolver.acme.email=${ACME_EMAIL}"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    environment:
+      - CF_DNS_API_TOKEN=${CF_DNS_API_TOKEN}
     ports:
       - "80:80"
       - "443:443"
@@ -22,11 +25,10 @@ services:
 
   api:
     image: ghcr.io/maxwell-tchiabe/sparring-partner-api:${IMAGE_TAG:-staging}
-    # Le port 8080 n'est plus exposé publiquement; Traefik gère le routage interne.
     env_file:
       - .env
     restart: unless-stopped
-    volumes: 
+    volumes:
       - ./short_term_memory:/app/data
     labels:
       - "traefik.enable=true"
