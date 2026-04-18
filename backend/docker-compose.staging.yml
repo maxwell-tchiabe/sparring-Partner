@@ -2,6 +2,7 @@ services:
   traefik:
     image: traefik:v3.0
     command:
+      - "--log.level=DEBUG"
       - "--api.insecure=false"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
