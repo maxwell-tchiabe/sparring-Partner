@@ -4,7 +4,7 @@ from io import BytesIO
 from typing import Dict, Optional, List
 from jose import JWTError, jwt
 
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Body, Query, Path, Request
+from fastapi import APIRouter, Response, UploadFile, File, Form, HTTPException, Body, Query, Path, Request
 from fastapi.responses import JSONResponse
 from fastapi.openapi.utils import get_openapi
 from fastapi.openapi.docs import get_swagger_ui_html
@@ -16,7 +16,8 @@ from ai_companion.graph import graph_builder
 from ai_companion.modules.image import ImageToText
 from ai_companion.modules.speech import SpeechToText, TextToSpeech
 from ai_companion.settings import settings
-from ai_companion.database.mongodb import db
+#from ai_companion.database.mongodb import db
+from ai_companion.database.supabase import db
 from ai_companion.models.message import Message, MessageContent
 from ai_companion.models.chat_session import ChatSession
 
@@ -37,19 +38,24 @@ def include_limiter(app):
     app.add_middleware(SlowAPIMiddleware)
 
 # Rate limit error handler
-async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
-    headers = {}
-    retry_after = getattr(exc, "retry_after", None)
-    if retry_after is not None:
-        headers["Retry-After"] = str(retry_after)
-    return JSONResponse(
+async def rate_limit_handler(request: Request, exc: RateLimitExceeded) -> Response:
+    retry_after_seconds = exc.limit.limit.GRANULARITY.seconds
+    
+    response = JSONResponse(
         status_code=429,
-        content={"error": "Too many requests"},
-        headers=headers
+        content={"error": "rate limit exceeded. please try again later.",
+                 "retry_after": retry_after_seconds
+        },
+        headers={"Retry-After": str(retry_after_seconds)}
     )
+    
+    response = request.app.state.limiter._inject_headers(
+        response, request.state.view_rate_limit
+    )
+    return response
 
 # Shared limit for all message-sending endpoints
-message_send_limit = limiter.shared_limit("3/hour", scope="send_messages")
+message_send_limit = limiter.shared_limit("50/hour", scope="send_messages")
 
 
 # Custom key function (e.g., using JWT)
@@ -98,11 +104,11 @@ async def create_chat_session(request: Request):
     """Create a new chat session"""
     try:
         user_id = request.state.user_id
-        session = ChatSession(title="New Chat", user_id=user_id)
+        session = ChatSession(title="New Chat Session", user_id=user_id)
         stored_session = await db.create_chat_session(session)
         return stored_session
     except Exception as e:
-        logger.error(f"Error creating chat session: {e}", exc_info=True)
+        logger.error(f"Error while creating chat session: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 @chat_router.get("/api/chat-sessions",

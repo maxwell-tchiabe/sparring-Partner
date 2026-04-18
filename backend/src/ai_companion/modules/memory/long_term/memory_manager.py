@@ -8,6 +8,7 @@ from langchain_groq import ChatGroq
 from pydantic import BaseModel, Field
 
 from ai_companion.core.prompts import MEMORY_ANALYSIS_PROMPT
+from ai_companion.core.helpers import clean_env_var
 from ai_companion.modules.memory.long_term.vector_store import get_vector_store
 from ai_companion.settings import settings
 
@@ -31,8 +32,8 @@ class MemoryManager:
         self.vector_store = get_vector_store()
         self.logger = logging.getLogger(__name__)
         self.llm = ChatGroq(
-            model=settings.SMALL_TEXT_MODEL_NAME,
-            api_key=settings.GROQ_API_KEY,
+            model=clean_env_var(settings.SMALL_TEXT_MODEL_NAME),
+            api_key=clean_env_var(settings.GROQ_API_KEY),
             temperature=0.1,
             max_retries=2,
         ).with_structured_output(MemoryAnalysis)

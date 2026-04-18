@@ -24,7 +24,7 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
   return (
     <div className="space-y-4">
       {messages.map((message) => (
-        <MessageItem key={message._id} message={message} />
+        <MessageItem key={message.id} message={message} />
       ))}
 
       {isLoading && (

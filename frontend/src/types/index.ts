@@ -6,7 +6,7 @@ export interface User {
 }
 
 export interface ChatSession {
-  _id: string;
+  id: string;
   title: string;
   created_at: Date;
 }
@@ -54,7 +54,7 @@ export interface LearningError {
 }
 
 export interface Message {
-  _id: string;
+  id: string;
   sessionId: string;
   sender: 'user' | 'assistant';
   content: MessageContent;
@@ -100,6 +100,14 @@ export interface PDFContent {
   text?: string;
   imageFile?: File;
   audioFile?: File;
+}
+
+export interface ErrorRecord {
+  id: string;
+  category: string;
+  detail: string;
+  correction: string;
+  timestamp: Date;
 }
 
 export interface Course {
