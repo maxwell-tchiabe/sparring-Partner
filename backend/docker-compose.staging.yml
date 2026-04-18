@@ -1,0 +1,10 @@
+services:
+  api:
+    image: ghcr.io/maxwell-tchiabe/sparring-partner-api:${IMAGE_TAG:-staging}
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    restart: unless-stopped
+    volumes: 
+      - ./short_term_memory:/app/data
