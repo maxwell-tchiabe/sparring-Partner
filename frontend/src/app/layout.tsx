@@ -12,7 +12,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Language Learning Assistant',
+  title: 'EvoChat - AI Language Learning Assistant',
   description:
     'AI-powered language learning platform with multimodal input and personalized learning',
 };

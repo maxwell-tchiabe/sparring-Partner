@@ -156,4 +156,6 @@ function downloadCSV(data: string, filename: string) {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  // Revoke the URL to prevent memory leaks
+  setTimeout(() => URL.revokeObjectURL(url), 100);
 }

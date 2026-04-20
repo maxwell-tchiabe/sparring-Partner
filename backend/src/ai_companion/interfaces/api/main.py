@@ -20,10 +20,22 @@ app = FastAPI(
 )
 security = HTTPBearer()
 
+# CORS must be registered FIRST so it wraps every request including preflight
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # Dev frontend — extend for prod
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 @app.middleware("http")
 async def auth_middleware(request: Request, call_next):
     # Skip auth for specific endpoints
-    # Allow unauthenticated access to health and docs (and their subpaths/static assets)
+    # Allow unauthenticated access to health, docs, and ALL OPTIONS preflight requests
+    if request.method == "OPTIONS":
+        return await call_next(request)
+
     public_prefixes = ("/api/health", "/docs", "/redoc", "/openapi.json", "/static", "/favicon.ico")
     if any(request.url.path.startswith(p) for p in public_prefixes):
         return await call_next(request)
@@ -61,13 +73,8 @@ async def auth_middleware(request: Request, call_next):
             content={"detail": str(e)}
         )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Or your specific frontend URL
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# CORS middleware is already registered above (before auth middleware)
+# Keeping this section as a reminder but the actual registration is at the top.
 app.include_router(chat_router)
 include_limiter(app)
 

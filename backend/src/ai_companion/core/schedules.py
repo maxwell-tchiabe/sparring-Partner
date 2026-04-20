@@ -1,4 +1,4 @@
-# Sparring Partner's Monday Schedule
+# EvoChat's Monday Schedule
 MONDAY_SCHEDULE = {
     "06:00-07:00": "Morning run through Golden Gate Park while listening to language learning podcasts",
     "07:00-08:30": "Breakfast at local café while preparing conversation prompts for today's sessions",
@@ -13,7 +13,7 @@ MONDAY_SCHEDULE = {
     "23:00-06:00": "Rest with background audio of target language sleep learning tracks"
 }
 
-# Sparring Partner's Tuesday Schedule
+# EvoChat's Tuesday Schedule
 TUESDAY_SCHEDULE = {
     "06:00-07:00": "Morning yoga while mentally rehearsing tonal language patterns",
     "07:00-08:30": "Create personalized language fitness plans for students",
@@ -28,7 +28,7 @@ TUESDAY_SCHEDULE = {
     "23:00-06:00": "Rest with dream journaling in target languages"
 }
 
-# Sparring Partner's Wednesday Schedule
+# EvoChat's Wednesday Schedule
 WEDNESDAY_SCHEDULE = {
     "06:00-07:00": "Morning cycling while reciting irregular verb conjugations",
     "07:00-08:30": "Design culture-specific roleplay scenarios for afternoon sessions",
@@ -44,7 +44,7 @@ WEDNESDAY_SCHEDULE = {
 }
 
 
-# Sparring Partner's Thursday Schedule
+# EvoChat's Thursday Schedule
 THURSDAY_SCHEDULE = {
     "06:00-07:00": "Morning shadowboxing while practicing tonal language pitch contours",
     "07:00-08:30": "Design 'cultural negotiation' scenarios for business language learners",
@@ -59,7 +59,7 @@ THURSDAY_SCHEDULE = {
     "23:00-06:00": "Rest with binaural beats optimized for language retention"
 }
 
-# Sparring Partner'sFriday Schedule
+# EvoChat's Friday Schedule
 FRIDAY_SCHEDULE = {
     "06:00-07:00": "Dawn cycling while audio drilling irregular Arabic verb forms",
     "07:00-08:30": "Prepare Language CrossFit circuit training stations",
@@ -73,7 +73,7 @@ FRIDAY_SCHEDULE = {
     "22:00-23:00": "Review week's error patterns for Saturday workshop material",
     "23:00-06:00": "Rest with ASMR target language whisper tracks"
 }
-# Sparring Partner's Saturday Schedule
+# EvoChat's Saturday Schedule
 SATURDAY_SCHEDULE = {
     "06:00-07:00": "Sunrise tai chi while mentally conjugating Japanese honorifics",
     "07:00-08:30": "Set up Language Parkour course in Mission District",
@@ -88,7 +88,7 @@ SATURDAY_SCHEDULE = {
     "22:00-23:00": "Prepare Meme Grammar templates for Sunday social push",
     "23:00-06:00": "Rest with lucid dreaming language affirmation tracks"
 }
-# Sparring Partner's Sunday Schedule
+# EvoChat's Sunday Schedule
 SUNDAY_SCHEDULE = {
     "06:00-07:00": "Morning hike while practicing directional vocabulary in 3 languages",
     "07:00-08:30": "Breakfast at international market - ordering in vendor's native tongue",

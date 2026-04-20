@@ -3,7 +3,7 @@ import { useTimer } from '@/app/hooks/hook';
 import { Button } from '@/components/common/Button';
 import { useApp } from '@/contexts/AppContext';
 import { MessageContent } from '@/types';
-import { Mic, PaperclipIcon, Send, StopCircle, X } from 'lucide-react';
+import { Mic, PaperclipIcon, Send, StopCircle, X, BrainCircuit } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { MessageList } from './MessageList';
@@ -21,9 +21,9 @@ export function ChatInterface() {
   const [inputValue, setInputValue] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [attachments, setAttachments] = useState<
-    { file: File; preview: string; type: string }[]
+    { file: File; preview: string; type: string; mimeType?: string }[]
   >([]);
-  const shouldAttachRef = useRef(false); // Reference to track if we should attach the recording
+  const shouldAttachRef = useRef(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -31,151 +31,162 @@ export function ChatInterface() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  // Audio recording states
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
-    null
-  );
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
-  const { duration: recordingDuration, reset: resetTimer } =
-    useTimer(isRecording);
+  const { duration: recordingDuration, reset: resetTimer } = useTimer(isRecording);
   const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
   const [waveformData, setWaveformData] = useState<Uint8Array | null>(null);
   const [audioPreviewUrl, setAudioPreviewUrl] = useState<string | null>(null);
+  const [volume, setVolume] = useState(0);
   const waveformRef = useRef<HTMLCanvasElement>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const animationRef = useRef<number | null>(null);
 
-  // Initialize audio context and analyzer
   const initAudioAnalyzer = async (stream: MediaStream) => {
-    const audioCtx = new (window.AudioContext ||
-      (window as any).webkitAudioContext)();
+    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
     const analyzer = audioCtx.createAnalyser();
     analyzer.fftSize = 256;
-
     const source = audioCtx.createMediaStreamSource(stream);
     source.connect(analyzer);
-
+    if (audioCtx.state === 'suspended') {
+      await audioCtx.resume();
+    }
     setAudioContext(audioCtx);
     setAnalyser(analyzer);
-
-    // Start waveform visualization
+    
+    // Add volume analysis
+    const dataArray = new Uint8Array(analyzer.frequencyBinCount);
+    const updateVolume = () => {
+      // Check if we are still analyzing (if analyser is still the same)
+      if (analyzer.context.state === 'closed') return;
+      
+      analyzer.getByteFrequencyData(dataArray);
+      let values = 0;
+      for (let i = 0; i < dataArray.length; i++) {
+        values += dataArray[i];
+      }
+      const average = values / dataArray.length;
+      setVolume(average);
+      requestAnimationFrame(updateVolume);
+    };
+    updateVolume();
     visualizeWaveform();
   };
 
-  // Visualize waveform
   const visualizeWaveform = () => {
     if (!analyser || !waveformRef.current) return;
-
     const canvas = waveformRef.current;
     const canvasCtx = canvas.getContext('2d');
     if (!canvasCtx) return;
-
     const bufferLength = analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
-
     const draw = () => {
       animationRef.current = requestAnimationFrame(draw);
       analyser.getByteTimeDomainData(dataArray);
       setWaveformData(dataArray);
-
-      canvasCtx.fillStyle = 'rgb(200, 200, 200)';
-      canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+      // Dark waveform style
+      canvasCtx.fillStyle = 'rgba(15, 17, 26, 0)';
+      canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
       canvasCtx.lineWidth = 2;
-      canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
+      canvasCtx.strokeStyle = 'rgba(6, 182, 212, 0.8)';
       canvasCtx.beginPath();
-
       const sliceWidth = (canvas.width * 1.0) / bufferLength;
       let x = 0;
-
       for (let i = 0; i < bufferLength; i++) {
         const v = dataArray[i] / 128.0;
         const y = (v * canvas.height) / 2;
-
-        if (i === 0) {
-          canvasCtx.moveTo(x, y);
-        } else {
-          canvasCtx.lineTo(x, y);
-        }
-
+        if (i === 0) canvasCtx.moveTo(x, y);
+        else canvasCtx.lineTo(x, y);
         x += sliceWidth;
       }
-
       canvasCtx.lineTo(canvas.width, canvas.height / 2);
       canvasCtx.stroke();
     };
-
     draw();
   };
 
-  // Format time (seconds to MM:SS)
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Start/stop recording
+  // Detect the actual MIME type the browser supports for MediaRecorder
+  const getSupportedMimeType = (): string => {
+    const candidates = [
+      'audio/webm;codecs=opus',
+      'audio/webm',
+      'audio/ogg;codecs=opus',
+      'audio/ogg',
+      'audio/mp4',
+    ];
+    for (const type of candidates) {
+      if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(type)) {
+        return type;
+      }
+    }
+    return '';
+  };
+
   const toggleRecording = async () => {
     if (!isRecording) {
       try {
-        // Reset all recording states
         resetTimer();
         setAudioChunks([]);
         setAudioPreviewUrl(null);
-        shouldAttachRef.current = true; // Set to true when starting new recording
-
-        // Request microphone access
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
+        shouldAttachRef.current = true;
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // Log track status
+        stream.getAudioTracks().forEach(track => {
+          console.log(`[Microphone] Track: "${track.label}" State: ${track.readyState} Muted: ${track.muted}`);
+          track.onmute = () => console.warn(`[Microphone] Track muted: ${track.label}`);
+          track.onunmute = () => console.log(`[Microphone] Track unmuted: ${track.label}`);
         });
-        const recorder = new MediaRecorder(stream);
+        // Detect real browser MIME type (not 'audio/wav' which is never natively recorded)
+        const mimeType = getSupportedMimeType();
+        const recorderOptions = mimeType ? { mimeType } : {};
+        const recorder = new MediaRecorder(stream, recorderOptions);
+        const actualMime = recorder.mimeType || mimeType || 'audio/webm';
+        // Derive a sensible file extension
+        const ext = actualMime.includes('ogg') ? 'ogg' : actualMime.includes('mp4') ? 'mp4' : 'webm';
+        console.log(`[MediaRecorder] Initializing with mimeType: ${actualMime}`);
         let recordingChunks: Blob[] = [];
-
-        // Initialize audio analyzer
         await initAudioAnalyzer(stream);
-
-        // Set up event handlers
-        recorder.ondataavailable = (e) => {
-          recordingChunks.push(e.data);
+        recorder.ondataavailable = (e) => { 
+          if (e.data.size > 0) {
+            recordingChunks.push(e.data); 
+            console.log(`[MediaRecorder] Chunk received: ${e.data.size} bytes. Total chunks: ${recordingChunks.length}`);
+          } 
         };
-
         recorder.onstop = () => {
-          // Create and attach the recording only if not cancelled
+          console.log(`[MediaRecorder] Stopped. Total chunks collected: ${recordingChunks.length}`);
           if (shouldAttachRef.current && recordingChunks.length > 0) {
-            const audioBlob = new Blob(recordingChunks, { type: 'audio/wav' });
+            const audioBlob = new Blob(recordingChunks, { type: actualMime });
             const audioUrl = URL.createObjectURL(audioBlob);
-
-            setAttachments((prev) => [
-              {
-                file: new File([audioBlob], 'recording.wav', {
-                  type: 'audio/wav',
-                }),
+            console.log(`[MediaRecorder] Blob created. Size: ${audioBlob.size} bytes. URL: ${audioUrl}`);
+              setAttachments(() => [{
+                file: new File([audioBlob], `recording.${ext}`, { type: actualMime }),
                 preview: audioUrl,
                 type: 'audio',
-              },
-            ]);
+                mimeType: actualMime,
+              }]);
+          } else {
+            console.warn(`[MediaRecorder] No recording to attach. shouldAttach: ${shouldAttachRef.current}, chunks: ${recordingChunks.length}`);
           }
-
-          // Clean up
-          if (audioContext && audioContext.state !== 'closed') {
-            audioContext.close().catch(console.error);
-          }
-
+          if (audioContext && audioContext.state !== 'closed') audioContext.close().catch(console.error);
           setAudioContext(null);
           setAnalyser(null);
           setWaveformData(null);
           stream.getTracks().forEach((track) => track.stop());
-          shouldAttachRef.current = false; // Reset for next recording
+          shouldAttachRef.current = false;
         };
-
-        // Start recording
-        recorder.start();
+        // Request data every 250ms so we always have chunks even for short recordings
+        recorder.start(250);
         setMediaRecorder(recorder);
         setIsRecording(true);
       } catch (error) {
@@ -183,39 +194,19 @@ export function ChatInterface() {
         alert('Could not access microphone. Please check permissions.');
       }
     } else {
-      // Stop recording
-      if (mediaRecorder) {
-        setIsRecording(false);
-        mediaRecorder.stop();
-      }
+      if (mediaRecorder) { setIsRecording(false); mediaRecorder.stop(); }
     }
   };
 
-  // Cancel recording
   const cancelRecording = () => {
-    // Set flag to prevent attachment
     shouldAttachRef.current = false;
-
-    // First stop media tracks to prevent more data
     if (mediaRecorder && mediaRecorder.stream) {
       mediaRecorder.stream.getTracks().forEach((track) => track.stop());
       mediaRecorder.stop();
     }
-
-    // Clean up
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current);
-      animationRef.current = null;
-    }
-    if (audioContext && audioContext.state !== 'closed') {
-      audioContext.close().catch(console.error);
-    }
-
-    // Reset all recording-related states
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    if (animationRef.current) { cancelAnimationFrame(animationRef.current); animationRef.current = null; }
+    if (audioContext && audioContext.state !== 'closed') audioContext.close().catch(console.error);
     setIsRecording(false);
     setMediaRecorder(null);
     setWaveformData(null);
@@ -223,177 +214,121 @@ export function ChatInterface() {
     setAnalyser(null);
   };
 
-  // Clean up on unmount
   useEffect(() => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-        animationRef.current = null;
-      }
-      if (audioContext && audioContext.state !== 'closed') {
-        audioContext.close().catch(console.error);
-      }
+      if (animationRef.current) { cancelAnimationFrame(animationRef.current); animationRef.current = null; }
+      if (audioContext && audioContext.state !== 'closed') audioContext.close().catch(console.error);
     };
   }, [audioContext]);
 
-  // Handle file uploads
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: {
-      'image/*': ['.png', '.jpg', '.jpeg', '.gif'],
-      'application/pdf': ['.pdf'],
-    },
+    accept: { 'image/*': ['.png', '.jpg', '.jpeg', '.gif'], 'application/pdf': ['.pdf'] },
     onDrop: (acceptedFiles) => {
       const newAttachments = acceptedFiles.map((file) => {
         const type = file.type.startsWith('image/') ? 'image' : 'pdf';
-        return {
-          file,
-          preview: type === 'image' ? URL.createObjectURL(file) : '',
-          type,
-        };
+        return { file, preview: type === 'image' ? URL.createObjectURL(file) : '', type };
       });
       setAttachments((prev) => [...prev, ...newAttachments]);
     },
   });
 
-  // Handle sending a message
   const handleSendMessage = async () => {
     if ((!inputValue.trim() && attachments.length === 0) || isLoading) return;
-
-    console.log('Sending message with sessionId:', sessionId);
-
-    // Create a new session if one doesn't exist and get the session ID
     let currentSessionId = sessionId;
     if (!currentSessionId) {
       try {
-        console.log('No session ID found, creating new session...');
         currentSessionId = await startNewSession();
-        console.log('Created new session with ID:', currentSessionId);
-        if (!currentSessionId) {
-          console.error('Failed to create new session');
-          return;
-        }
-      } catch (error) {
-        console.error('Error creating new session:', error);
-        return;
-      }
+        if (!currentSessionId) return;
+      } catch (error) { console.error('Error creating new session:', error); return; }
     }
 
-    // Create message content based on attachments and text
     let content: MessageContent;
-
     if (attachments.length > 0) {
-      // Handle attachments
-      const attachment = attachments[0]; // For simplicity, we'll just use the first attachment
-
+      const attachment = attachments[0];
       if (attachment.type === 'image') {
-        content = {
-          type: 'image',
-          imageFile: attachment.file,
-          text: inputValue || 'Uploaded image',
-        };
+        content = { type: 'image', imageFile: attachment.file, text: inputValue || 'Uploaded image' };
       } else if (attachment.type === 'audio') {
-        content = {
-          type: 'audio',
-          audioFile: attachment.file,
-          text: inputValue || '',
-        };
+        content = { type: 'audio', audioFile: attachment.file, text: inputValue || '' };
       } else {
-        content = {
-          type: 'pdf',
-          pdfUrl: URL.createObjectURL(attachment.file),
-          pageCount: 0,
-          text: inputValue || 'Uploaded PDF',
-        };
+        content = { type: 'pdf', pdfUrl: URL.createObjectURL(attachment.file), pageCount: 0, text: inputValue || 'Uploaded PDF' };
       }
     } else {
-      // Text-only message
-      content = {
-        type: 'conversation',
-        text: inputValue,
-      };
+      content = { type: 'conversation', text: inputValue };
     }
 
-    // Add message to context
-    addMessage({
-      sender: 'user',
-      content,
-      sessionId: currentSessionId,
-    });
-
-    // Reset state
+    addMessage({ sender: 'user', content, sessionId: currentSessionId });
     setInputValue('');
+    attachments.forEach(attachment => {
+      if (attachment.preview && !attachment.preview.startsWith('data:')) {
+        URL.revokeObjectURL(attachment.preview);
+      }
+    });
     setAttachments([]);
-
-    // Focus input for next message
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
+    if (inputRef.current) inputRef.current.focus();
   };
 
-  // Handle key press (Enter to send)
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); }
   };
 
-  // Remove an attachment
   const removeAttachment = (index: number) => {
     setAttachments((prev) => {
       const newAttachments = [...prev];
-
-      // Revoke the object URL to avoid memory leaks
-      if (newAttachments[index].preview) {
-        URL.revokeObjectURL(newAttachments[index].preview);
-      }
-
+      if (newAttachments[index].preview) URL.revokeObjectURL(newAttachments[index].preview);
       newAttachments.splice(index, 1);
       return newAttachments;
     });
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-[#05050A]">
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
         <MessageList messages={messages} isLoading={isLoading} />
         <div ref={messagesEndRef} />
       </div>
+
       {/* Attachment preview */}
       {attachments.length > 0 && (
-        <div className="px-4 py-2 border-t border-gray-200">
+        <div className="px-4 py-2 border-t border-white/5 bg-[#0A0A0F]">
           <div className="flex flex-wrap gap-2">
             {attachments.map((attachment, index) => (
               <div key={index} className="relative">
                 {attachment.type === 'image' ? (
-                  <div className="relative h-20 w-20 rounded overflow-hidden">
-                    <img
-                      src={attachment.preview}
-                      alt="Preview"
-                      className="h-full w-full object-cover"
-                    />
+                  <div className="relative h-20 w-20 rounded-xl overflow-hidden border border-white/10">
+                    <img src={attachment.preview} alt="Preview" className="h-full w-full object-cover" />
                   </div>
                 ) : attachment.type === 'audio' ? (
-                  <div className="flex items-center justify-between p-2 bg-gray-100 rounded w-full">
-                    <div className="flex items-center">
-                      <div className="bg-blue-100 p-2 rounded-full mr-2">
-                        <Mic className="h-4 w-4 text-blue-600" />
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 bg-slate-800/60 backdrop-blur-md border border-white/10 rounded-xl min-w-[240px] sm:min-w-[320px] shadow-xl animate-in zoom-in-95 duration-200">
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                      <div className="flex-shrink-0 bg-cyan-500/20 border border-cyan-500/30 p-2 rounded-lg shadow-inner relative">
+                        <Mic className="h-4 w-4 text-cyan-400" />
+                        <div className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-cyan-400 animate-pulse"></div>
                       </div>
-                      <span className="text-sm">
-                        Recording ({formatTime(recordingDuration)})
-                      </span>
+                      <span className="text-xs md:text-sm font-medium text-slate-300 truncate">Recording ({formatTime(recordingDuration)})</span>
                     </div>
-                    <audio controls src={attachment.preview} className="h-8" />
+                    <div className="w-full sm:flex-1">
+                      <audio 
+                        controls 
+                        className="h-8 w-full filter invert hue-rotate-180 opacity-90 hover:opacity-100 transition-opacity"
+                        onError={(e) => {
+                          const target = e.target as HTMLAudioElement;
+                          console.error(`[AudioPreview] Error code: ${target.error?.code}. Message: ${target.error?.message}`);
+                        }}
+                        onPlay={() => console.log(`[AudioPreview] Playing preview: ${attachment.preview}`)}
+                      >
+                        <source src={attachment.preview} type={attachment.mimeType || 'audio/webm'} />
+                      </audio>
+                    </div>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-center h-20 w-20 bg-gray-100 rounded">
-                    <span className="text-xs text-gray-500">PDF</span>
+                  <div className="flex items-center justify-center h-20 w-20 bg-slate-800/60 border border-white/10 rounded-xl">
+                    <span className="text-xs text-slate-400 font-mono">PDF</span>
                   </div>
                 )}
                 <button
-                  className="absolute -top-2 -right-2 h-6 w-6 bg-gray-800 rounded-full flex items-center justify-center text-white cursor-pointer"
+                  className="absolute -top-2 -right-2 h-6 w-6 bg-slate-700 border border-white/10 rounded-full flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-600 cursor-pointer transition-colors"
                   onClick={() => removeAttachment(index)}
                 >
                   <X className="h-3 w-3" />
@@ -405,116 +340,115 @@ export function ChatInterface() {
       )}
 
       {/* Input area */}
-      <div className="border-t border-gray-200 p-4">
+      <div className="border-t border-white/5 p-4 bg-[#0A0A0F]">
         <div
-          className={`border ${
-            isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
-          } rounded-lg p-2`}
+          className={`border ${isDragActive ? 'border-cyan-500/50 bg-cyan-500/5' : 'border-white/10 hover:border-white/20'
+            } bg-slate-900/50 backdrop-blur-sm rounded-2xl p-3 transition-all duration-200`}
         >
           {/* Recording indicator */}
           {isRecording && (
-            <div className="flex items-center justify-between bg-red-50 p-2 rounded mb-2">
+            <div className="flex items-center justify-between bg-red-500/10 border border-red-500/20 p-3 rounded-xl mb-3">
               <div className="flex items-center">
-                <div className="h-3 w-3 bg-red-500 rounded-full animate-pulse mr-2"></div>
-                <span className="text-sm font-medium text-red-700">
-                  Recording: {formatTime(recordingDuration)}
+                <div className="h-2.5 w-2.5 bg-red-400 rounded-full animate-pulse mr-2"></div>
+                <span className="text-sm font-medium text-red-300 font-mono">
+                  {formatTime(recordingDuration)}
                 </span>
               </div>
               <canvas
                 ref={waveformRef}
                 width="200"
                 height="30"
-                className="w-32 h-8 bg-white rounded"
+                className="w-32 h-8 rounded-lg"
               />
-              <Button
-                variant="secondary"
-                size="sm"
+              <div className="flex-1 px-4 hidden sm:block">
+                <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full transition-all duration-75 ${volume > 50 ? 'bg-cyan-300' : 'bg-cyan-500'}`}
+                    style={{ 
+                      width: `${Math.min(100, (volume / 128) * 100)}%`,
+                      boxShadow: volume > 30 ? '0 0 10px rgba(6, 182, 212, 0.5)' : 'none'
+                    }}
+                  ></div>
+                </div>
+              </div>
+              <button
                 onClick={cancelRecording}
-                className="ml-2 cursor-pointer"
+                className="ml-3 px-3 py-1 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-medium transition-colors cursor-pointer"
               >
                 Cancel
-              </Button>
+              </button>
             </div>
           )}
 
-          <div className="flex items-end">
+          <div className="flex items-end gap-2">
             <div className="flex-1">
               <textarea
                 ref={inputRef}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Type your message..."
-                className="w-full resize-none border-0 focus:ring-0 focus:outline-none p-2 max-h-32"
+                placeholder="Message EvoChat..."
+                className="w-full resize-none border-0 focus:ring-0 focus:outline-none p-2 max-h-32 bg-transparent text-slate-200 placeholder-slate-600 text-sm"
                 rows={1}
               />
             </div>
 
-            <div className="flex space-x-2 items-center">
-              {/* File attachment button */}
+            <div className="flex items-center gap-1">
+              {/* File attachment */}
               <div {...getRootProps()}>
                 <input {...getInputProps()} />
-                <Button
-                  variant="ghost"
-                  size="sm"
+                <button
                   type="button"
-                  className="text-gray-500 hover:text-gray-700"
                   disabled={isRecording}
+                  className="flex items-center justify-center h-9 w-9 rounded-xl text-slate-500 hover:text-slate-300 hover:bg-white/5 transition-colors disabled:opacity-40 cursor-pointer"
+                  title="Attach file"
                 >
-                  <PaperclipIcon className="h-5 w-5 cursor-pointer" />
-                </Button>
+                  <PaperclipIcon className="h-5 w-5" />
+                </button>
               </div>
 
-              {/* Audio recording button */}
-              <Button
-                variant="ghost"
-                size="sm"
+              {/* Recording button */}
+              <button
                 type="button"
-                className={`${isRecording ? 'text-red-500' : 'text-gray-500 hover:text-gray-700'}`}
                 onClick={toggleRecording}
+                className={`flex items-center justify-center h-9 w-9 rounded-xl transition-all cursor-pointer ${isRecording
+                  ? 'text-red-400 bg-red-500/10 border border-red-500/20'
+                  : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
+                  }`}
+                title={isRecording ? 'Stop recording' : 'Record audio'}
               >
-                {isRecording ? (
-                  <StopCircle className="h-5 w-5 cursor-pointer" />
-                ) : (
-                  <Mic className="h-5 w-5 cursor-pointer" />
-                )}
-              </Button>
+                {isRecording ? <StopCircle className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+              </button>
 
               {/* Send button */}
-              <Button
-                variant="primary"
-                size="sm"
+              <button
                 type="button"
-                className="cursor-pointer"
-                disabled={
-                  (!inputValue.trim() && attachments.length === 0) ||
-                  isLoading ||
-                  isRecording
-                }
+                disabled={(!inputValue.trim() && attachments.length === 0) || isLoading || isRecording}
                 onClick={handleSendMessage}
+                className="flex items-center justify-center h-9 w-9 rounded-xl bg-gradient-to-br from-cyan-500 to-indigo-600 text-white shadow-[0_0_15px_-3px_rgba(6,182,212,0.5)] hover:shadow-[0_0_20px_-3px_rgba(6,182,212,0.7)] hover:scale-105 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 cursor-pointer"
+                title="Send message"
               >
-                <Send className="h-5 w-5" />
-              </Button>
+                <Send className="h-4 w-4" />
+              </button>
             </div>
           </div>
         </div>
+
+        <p className="text-center text-xs text-slate-700 mt-2">
+          EvoChat may produce errors. Verify important information.
+        </p>
       </div>
 
-      {/* Upgrade to Premium Banner */}
+      {/* Upgrade Banner */}
       {showUpgrade && (
-        <div className="flex flex-col sm:flex-row justify-center items-center bg-yellow-50 border border-yellow-300 rounded-lg p-3 sm:p-4 mx-2 sm:mx-4 my-2 gap-3 sm:gap-0 shadow text-center">
-          <span className="text-yellow-800 font-semibold mb-2 sm:mb-0 sm:mr-4 text-sm sm:text-base">
-            You have reached the free usage limit. Upgrade to Premium for
-            unlimited access!
+        <div className="flex flex-col sm:flex-row justify-center items-center bg-gradient-to-r from-amber-950/50 to-orange-950/50 border border-amber-500/20 rounded-2xl p-4 mx-4 mb-4 gap-3 sm:gap-0 backdrop-blur-sm">
+          <span className="text-amber-200 font-semibold mb-2 sm:mb-0 sm:mr-4 text-sm">
+            You've reached the free limit. Go Premium for unlimited access.
           </span>
           <Link href="/upgrade" className="w-full sm:w-auto">
-            <Button
-              variant="primary"
-              size="sm"
-              className="w-full sm:w-auto bg-gradient-to-r cursor-pointer from-indigo-500 to-blue-500 text-white font-bold px-4 py-2 rounded-lg shadow hover:from-indigo-600 hover:to-blue-600 transition-all"
-            >
+            <button className="w-full sm:w-auto px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-sm hover:from-amber-400 hover:to-orange-400 transition-all cursor-pointer shadow-[0_0_20px_-5px_rgba(245,158,11,0.4)]">
               Upgrade to Premium
-            </Button>
+            </button>
           </Link>
         </div>
       )}
