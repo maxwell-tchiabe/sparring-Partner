@@ -165,7 +165,14 @@ function ImageMessage({ imageData, imageFile, alt }: { imageData?: string; image
   React.useEffect(() => {
     let objectUrl = '';
     if (imageData) {
-      setUrl(`data:image/png;base64,${imageData}`);
+      // Check if imageData already has a data URL prefix
+      const hasPrefix = imageData.startsWith('data:');
+      if (hasPrefix) {
+        setUrl(imageData);
+      } else {
+        // Fallback to PNG if no prefix, but most browsers are forgiving with the header
+        setUrl(`data:image/png;base64,${imageData}`);
+      }
     } else if (imageFile) {
       objectUrl = URL.createObjectURL(imageFile);
       setUrl(objectUrl);
@@ -197,7 +204,20 @@ function renderMessageContent(message: Message, isUser: boolean) {
 
   switch (message.content.type) {
     case 'conversation':
-      return <p className="whitespace-pre-wrap">{message.content.text}</p>;
+      return (
+        <div>
+          {message.image && (
+            <div className="mb-2">
+              <ImageMessage 
+                imageData={message.image} 
+                imageFile={message.content.imageFile} 
+                alt={message.content.text} 
+              />
+            </div>
+          )}
+          <p className="whitespace-pre-wrap">{message.content.text}</p>
+        </div>
+      );
 
     case 'image': {
       return (

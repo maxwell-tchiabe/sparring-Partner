@@ -4,7 +4,7 @@ from io import BytesIO
 from typing import Dict, Optional, List
 from jose import JWTError, jwt
 
-from fastapi import APIRouter, Response, UploadFile, File, Form, HTTPException, Body, Query, Path, Request
+from fastapi import APIRouter, Response, UploadFile, File, Form, HTTPException, Body, Query, Path, Request, BackgroundTasks
 from fastapi.responses import JSONResponse
 from fastapi.openapi.utils import get_openapi
 from fastapi.openapi.docs import get_swagger_ui_html
@@ -20,6 +20,7 @@ from ai_companion.settings import settings
 from ai_companion.database.supabase import db
 from ai_companion.models.message import Message, MessageContent
 from ai_companion.models.chat_session import ChatSession
+from ai_companion.modules.dashboard.service import DashboardService
 
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -205,7 +206,9 @@ async def delete_chat_session(
 @message_send_limit
 async def chat_handler(
     request: Request,
+    background_tasks: BackgroundTasks,
     session_id: str = Form(..., description="ID of the chat session"),
+    # ... rest of parameters
     message: Optional[str] = Form(None, description="Text message to send"),
     audio: Optional[UploadFile] = File(None, description="Audio file to process"),
     image: Optional[UploadFile] = File(None, description="Image file to analyze"),
@@ -242,11 +245,18 @@ async def chat_handler(
             content = message
         else:
             raise HTTPException(status_code=400, detail="No valid input provided")        # Create and store user message
+        # Create and store user message
+        msg_type = "conversation"
+        if image:
+            msg_type = "image"
+        elif audio:
+            msg_type = "audio"
+            
         user_message = Message(
             session_id=session_id,
             sender="user",
             content=MessageContent(
-                type="conversation" if message else "audio" if audio else "image",
+                type=msg_type,
                 text=content,
             ),
             audio=base64.b64encode(audio_buffer).decode('utf-8') if audio_buffer else None,
@@ -309,6 +319,14 @@ async def chat_handler(
             "audio": stored_assistant_message.audio,
             "image": stored_assistant_message.image
         }
+
+        # Trigger background processing for dashboard (errors, badges)
+        logger.info(f"Queuing dashboard analysis for user {user_id}, message {stored_user_message.id}")
+        background_tasks.add_task(
+            DashboardService.process_message_for_dashboard,
+            user_id,
+            str(stored_user_message.id)
+        )
 
         return response_data
 

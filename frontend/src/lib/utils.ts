@@ -11,12 +11,20 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * Formats a date to a readable string
  */
-export function formatDate(date: Date): string {
+export function formatDate(date: Date | string): string {
+  // Convert string input to Date if needed
+  const parsedDate = typeof date === 'string' ? new Date(date) : date;
+
+  // Validate the Date object
+  if (isNaN(parsedDate.getTime())) {
+    return 'N/A';
+  }
+
   return new Intl.DateTimeFormat('default', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
-  }).format(date);
+  }).format(parsedDate);
 }
 
 /**

@@ -73,7 +73,9 @@ class SupabaseManager:
                 .limit(limit)
                 .execute())
             
-            return [Message(**msg) for msg in result.data]
+            msgs = [Message(**msg) for msg in result.data]
+            logger.debug(f"[Supabase] Retrieved {len(msgs)} messages for session {session_id}")
+            return msgs
             
         except Exception as e:
             error_msg = f"Error retrieving messages for session {session_id}: {str(e)}"
@@ -133,7 +135,9 @@ class SupabaseManager:
                 query = query.eq("user_id", user_id)
                 
             result = query.order("created_at", desc=True).limit(limit).execute()
-            return [ChatSession(**session) for session in result.data]
+            sessions = [ChatSession(**session) for session in result.data]
+            logger.debug(f"[Supabase] Retrieved {len(sessions)} sessions for user {user_id}")
+            return sessions
             
         except Exception as e:
             logger.error(f"Error retrieving chat sessions: {str(e)}")
@@ -188,6 +192,73 @@ class SupabaseManager:
         except Exception as e:
             logger.error(f"Error deleting chat session: {str(e)}")
             raise RuntimeError(f"Failed to delete chat session: {str(e)}") 
+
+    async def get_user_badges(self, user_id: str) -> List[dict]:
+        """Retrieve badges for a user"""
+        try:
+            result = (self.client.table("badges")
+                .select("*")
+                .eq("user_id", user_id)
+                .order("earned_at", desc=True)
+                .execute())
+            logger.debug(f"[Supabase] Found {len(result.data)} badges for user {user_id}")
+            return result.data
+        except Exception as e:
+            logger.error(f"Error retrieving user badges: {str(e)}")
+            return []
+
+    async def save_badge(self, badge_data: dict) -> dict:
+        """Save a new badge for a user"""
+        try:
+            result = self.client.table("badges").insert(badge_data).execute()
+            return result.data[0] if result.data else {}
+        except Exception as e:
+            logger.error(f"Error saving badge: {str(e)}")
+            raise RuntimeError(f"Failed to save badge: {str(e)}")
+
+    async def get_user_learning_errors(self, user_id: str, limit: int = 20) -> List[dict]:
+        """Retrieve learning errors for a user"""
+        try:
+            result = (self.client.table("learning_errors")
+                .select("*")
+                .eq("user_id", user_id)
+                .order("timestamp", desc=True)
+                .limit(limit)
+                .execute())
+            logger.debug(f"[Supabase] Found {len(result.data)} errors for user {user_id}")
+            return result.data
+        except Exception as e:
+            logger.error(f"Error retrieving user learning errors: {str(e)}")
+            return []
+
+    async def save_learning_error(self, error_data: dict) -> dict:
+        """Save a new learning error"""
+        try:
+            result = self.client.table("learning_errors").insert(error_data).execute()
+            return result.data[0] if result.data else {}
+        except Exception as e:
+            logger.error(f"Error saving learning error: {str(e)}")
+            raise RuntimeError(f"Failed to save learning error: {str(e)}")
+
+    async def get_message_count(self, user_id: str) -> int:
+        """Get total message count for a user across all sessions"""
+        try:
+            # We first get sessions for the user
+            sessions = await self.get_chat_sessions(user_id)
+            session_ids = [s.id for s in sessions]
+            
+            if not session_ids:
+                return 0
+                
+            # Then count messages in those sessions
+            result = (self.client.table("messages")
+                .select("id", count="exact")
+                .in_("session_id", session_ids)
+                .execute())
+            return result.count if result.count is not None else 0
+        except Exception as e:
+            logger.error(f"Error counting messages: {str(e)}")
+            return 0
 
 # Create a singleton instance
 db = SupabaseManager()

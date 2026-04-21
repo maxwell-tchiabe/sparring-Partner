@@ -1,11 +1,20 @@
 from datetime import datetime, timezone
 from typing import Optional, Literal
-from pydantic import BaseModel, Field, ConfigDict, field_validator
+from pydantic import BaseModel, Field, ConfigDict, AliasGenerator
+from pydantic.alias_generators import to_camel
 import uuid
 
 
 class MessageContent(BaseModel):
     """Content of a message."""
+    model_config = ConfigDict(
+        alias_generator=AliasGenerator(
+            validation_alias=to_camel,
+            serialization_alias=to_camel,
+        ),
+        populate_by_name=True
+    )
+
     type: Literal["conversation", "audio", "image", "pdf"]
     text: str
     audioFile: Optional[bytes] = None
@@ -16,8 +25,12 @@ class MessageContent(BaseModel):
 class Message(BaseModel):
     """Message model for Supabase storage."""
     model_config = ConfigDict(
-        arbitrary_types_allowed=True,
-        populate_by_name=True
+        alias_generator=AliasGenerator(
+            validation_alias=to_camel,
+            serialization_alias=to_camel,
+        ),
+        populate_by_name=True,
+        arbitrary_types_allowed=True
     )
 
     # For Supabase, we need to ensure id is a UUID

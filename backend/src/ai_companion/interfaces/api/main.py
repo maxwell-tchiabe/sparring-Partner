@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer
 from ai_companion.interfaces.api.routes import chat_router, include_limiter
+from ai_companion.interfaces.api.dashboard import dashboard_router
 from fastapi.middleware.cors import CORSMiddleware
 from ai_companion.core.auth import verify_token
 
@@ -76,5 +77,6 @@ async def auth_middleware(request: Request, call_next):
 # CORS middleware is already registered above (before auth middleware)
 # Keeping this section as a reminder but the actual registration is at the top.
 app.include_router(chat_router)
+app.include_router(dashboard_router)
 include_limiter(app)
 
