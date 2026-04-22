@@ -12,10 +12,11 @@ import {
   getUserBadges,
   getLearningErrors,
 } from '@/services/api';
-import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 import type { DashboardStats, AIInsight, Badge, LearningError } from '@/types';
 
 export default function DashboardPage() {
+  const { user: authUser, loading: authLoading } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [insights, setInsights] = useState<AIInsight[]>([]);
   const [badges, setBadges] = useState<Badge[]>([]);
@@ -24,16 +25,13 @@ export default function DashboardPage() {
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.id) {
-        setUserId(session.user.id);
-      } else {
+    if (!authLoading) {
+      setUserId(authUser?.id ?? null);
+      if (!authUser) {
         setLoading(false);
       }
-    };
-    fetchUser();
-  }, []);
+    }
+  }, [authUser, authLoading]);
 
   useEffect(() => {
     if (!userId) return;

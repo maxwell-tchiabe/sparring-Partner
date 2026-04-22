@@ -5,7 +5,13 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 // Initialize the Supabase client with empty strings as fallback
 // This allows the app to build even if env vars are missing
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+  },
+});
 
 // Function to check if Supabase is properly configured
 export const isSupabaseConfigured = () => {

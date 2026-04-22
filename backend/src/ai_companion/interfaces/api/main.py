@@ -25,7 +25,7 @@ security = HTTPBearer()
 # CORS must be registered FIRST so it wraps every request including preflight
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Dev frontend — extend for prod
+    allow_origins=["http://localhost:3000", "evochat.maxwelltbtech.com"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -45,7 +45,7 @@ async def auth_middleware(request: Request, call_next):
         "/openapi.json", 
         "/static", 
         "/favicon.ico",
-        "/api/auth/session"  # Allow setting/clearing session without auth
+        "/api/auth/session"
     )
     if any(request.url.path.startswith(p) for p in public_prefixes):
         return await call_next(request)
@@ -62,20 +62,14 @@ async def auth_middleware(request: Request, call_next):
 
         if not token:
             # No token provided
-            print(f"Auth middleware: missing authentication for path {request.url.path}")  # Debug log
             return JSONResponse(
                 status_code=401,
                 content={"detail": "Authentication required. No valid token found in cookies or headers."}
             )
 
-        print(f"Token identified (source: {'cookie' if request.cookies.get('sb-access-token') else 'header'})")  # Debug log
-        print(f"Token extracted: {token[:10]}...")  # Debug log - only show first 10 chars for security
-        
         user_id = verify_token(token)
-        print(f"Verify token result - user_id: {user_id}")  # Debug log
         
         if not user_id:
-            print("Token verification failed - no user_id returned")  # Debug log
             return JSONResponse(
                 status_code=401,
                 content={"detail": "Invalid authentication token"}
@@ -91,8 +85,6 @@ async def auth_middleware(request: Request, call_next):
             content={"detail": str(e)}
         )
 
-# CORS middleware is already registered above (before auth middleware)
-# Keeping this section as a reminder but the actual registration is at the top.
 app.include_router(chat_router)
 app.include_router(dashboard_router)
 app.include_router(auth_router)

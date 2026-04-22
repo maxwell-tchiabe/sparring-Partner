@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     # Supabase configuration
     SUPABASE_URL: str
     SUPABASE_KEY: str
+    ENVIRONMENT: str = "development"
     GROQ_API_KEY: str
     ELEVENLABS_API_KEY: str
     ELEVENLABS_VOICE_ID: str
