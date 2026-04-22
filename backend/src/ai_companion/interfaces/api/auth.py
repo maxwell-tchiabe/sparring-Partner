@@ -23,7 +23,7 @@ async def set_session(response: Response, request_data: SessionRequest):
         cookie_params = {
             "httponly": True,
             "secure": settings.ENVIRONMENT == "production",
-            "samesite": "lax",
+            "samesite": "none",
             "path": "/",
             "max_age": 604800
         }
