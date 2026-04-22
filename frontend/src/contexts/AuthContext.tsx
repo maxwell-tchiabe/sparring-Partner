@@ -5,6 +5,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { jwtDecode, JwtPayload } from 'jwt-decode';
 import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
+import { syncSessionWithBackend, clearBackendSession, fetchMe } from '@/services/auth';
 
 type AuthContextType = {
   user: User | null;
@@ -43,21 +44,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return '';
     }
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setUserRole(extractUserRole(session));
-      setLoading(false);
-    });
+    // Initialize auth from backend or current session
+    const initializeAuth = async () => {
+      try {
+        const backendData = await fetchMe();
+
+        if (backendData?.access_token && backendData?.refresh_token) {
+          const { data: { session: newSession }, error } = await supabase.auth.setSession({
+            access_token: backendData.access_token,
+            refresh_token: backendData.refresh_token,
+          });
+
+          if (!error && newSession) {
+            setSession(newSession);
+            setUser(newSession.user);
+            setUserRole(extractUserRole(newSession));
+            setLoading(false);
+            return;
+          }
+        }
+
+        // 2. Fallback to default session check (if any)
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        setUserRole(extractUserRole(currentSession));
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
 
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setUserRole(extractUserRole(session));
+
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        if (session) {
+          await syncSessionWithBackend(
+            session.access_token,
+            session.refresh_token || ''
+          ).catch(console.error);
+        }
+      } else if (event === 'SIGNED_OUT') {
+        await clearBackendSession().catch(console.error);
+      }
+
       setLoading(false);
     });
 
@@ -79,6 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
+    await clearBackendSession().catch(console.error);
     if (error) throw error;
     router.push('/login');
   };

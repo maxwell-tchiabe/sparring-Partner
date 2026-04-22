@@ -16,6 +16,7 @@ import {
   Smartphone,
   User,
   X,
+  BrainCircuit,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -31,7 +32,6 @@ export function Navigation() {
   const [isProfileMenuOpen, setProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
-  // Check if mobile view on mount and resize
   useEffect(() => {
     const checkIfMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -47,7 +47,6 @@ export function Navigation() {
     return () => window.removeEventListener('resize', checkIfMobile);
   }, []);
 
-  // Close profile menu on outside click
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -63,7 +62,6 @@ export function Navigation() {
     };
   }, [profileMenuRef]);
 
-  // Don't render navigation on home or login pages
   if (pathname === '/' || pathname === '/login') {
     return null;
   }
@@ -71,7 +69,7 @@ export function Navigation() {
   const handleNewChat = async () => {
     const sessionId = await startNewSession();
     router.push(`/chat/${sessionId}`);
-    if (isMobile) setIsOpen(false); 
+    if (isMobile) setIsOpen(false);
   };
 
   const handleLogout = async () => {
@@ -84,27 +82,10 @@ export function Navigation() {
   };
 
   const navItems = [
-    {
-      name: 'Chat',
-      href: '/chat',
-      icon: MessageSquare,
-    },
-    {
-      name: 'Dashboard',
-      href: '/dashboard',
-      icon: BarChart2,
-    },
-    {
-      name: 'Voice Assistant',
-      href: '/voice',
-      icon: Mic,
-    },
-    {
-      name: 'Admin',
-      href: '/admin',
-      icon: Settings,
-      adminOnly: true,
-    },
+    { name: 'Chat', href: '/chat', icon: MessageSquare },
+    { name: 'Dashboard', href: '/dashboard', icon: BarChart2 },
+    { name: 'Voice Assistant', href: '/voice', icon: Mic },
+    { name: 'Admin', href: '/admin', icon: Settings, adminOnly: true },
   ];
 
   const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
@@ -116,8 +97,10 @@ export function Navigation() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`fixed z-50 md:hidden m-4 p-2 rounded-lg ${
-          isOpen ? 'right-4 bg-gray-800' : 'right-4 bg-indigo-600'
-        } text-white shadow-lg transition-all`}
+          isOpen
+            ? 'right-4 bg-slate-800 border border-white/10'
+            : 'right-4 bg-gradient-to-br from-cyan-500 to-indigo-600'
+        } text-white shadow-lg transition-all cursor-pointer`}
         aria-label="Toggle navigation"
       >
         {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -126,32 +109,47 @@ export function Navigation() {
       {/* Navigation sidebar */}
       <nav
         className={cn(
-          'fixed md:relative flex flex-col h-screen bg-gray-900 text-white w-64 z-40 transition-transform duration-300 ease-in-out',
+          'fixed md:relative flex flex-col h-screen bg-[#0A0A0F] border-r border-white/5 text-white w-64 z-40 transition-transform duration-300 ease-in-out',
           isMobile && !isOpen ? '-translate-x-full' : 'translate-x-0',
-          isMobile && 'shadow-xl'
+          isMobile && 'shadow-2xl'
         )}
       >
-        <div className="flex-shrink-0 p-4 border-b border-gray-800">
-          <h1 className="text-xl font-bold">LangAI</h1>
+        {/* Logo area */}
+        <div className="flex-shrink-0 p-4 border-b border-white/5 flex items-center">
+          <div className="relative">
+            <img
+              src="/evochat_logo.png"
+              alt="EvoChat Logo"
+              className="h-8 w-8 mr-3 object-contain rounded-md shadow-[0_0_12px_-2px_rgba(6,182,212,0.5)]"
+            />
+          </div>
+          <h1 className="text-lg font-bold tracking-tight text-white">EvoChat</h1>
         </div>
 
         <div className="flex flex-col flex-1 overflow-hidden">
+          {/* Nav items */}
           <div className="flex-shrink-0 py-4">
-            <ul className="space-y-2 px-2">
+            <ul className="space-y-1 px-2">
               {navItems.map((item) => {
                 if (item.adminOnly && userRole !== 'admin') return null;
+                const isActive = pathname === item.href;
                 return (
                   <li key={item.href}>
                     <Link
                       href={item.href}
                       onClick={() => isMobile && setIsOpen(false)}
                       className={cn(
-                        'flex items-center px-4 py-2 text-gray-300 hover:bg-gray-800 rounded-md transition-colors',
-                        pathname === item.href && 'bg-gray-800 text-white'
+                        'flex items-center px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200',
+                        isActive
+                          ? 'bg-gradient-to-r from-indigo-600/30 to-cyan-600/10 text-cyan-400 border border-cyan-500/20'
+                          : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
                       )}
                     >
-                      <item.icon className="mr-3 h-5 w-5" />
+                      <item.icon className={cn('mr-3 h-5 w-5', isActive ? 'text-cyan-400' : 'text-slate-500')} />
                       <span>{item.name}</span>
+                      {isActive && (
+                        <span className="ml-auto h-1.5 w-1.5 rounded-full bg-cyan-400"></span>
+                      )}
                     </Link>
                   </li>
                 );
@@ -159,59 +157,61 @@ export function Navigation() {
             </ul>
           </div>
 
+          {/* New Chat button */}
           <div className="px-2 py-2">
             <button
               onClick={handleNewChat}
-              className="w-full flex items-center px-4 py-2 text-gray-300 hover:bg-gray-800 rounded-md transition-colors cursor-pointer"
+              className="w-full flex items-center px-4 py-2.5 text-sm font-medium text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 rounded-xl transition-all duration-200 cursor-pointer group"
             >
-              <Plus className="mr-3 h-5 w-5" />
-              <span>New Chat</span>
+              <Plus className="mr-3 h-5 w-5 text-cyan-500 group-hover:rotate-90 transition-transform duration-300" />
+              <span>New Session</span>
             </button>
           </div>
 
-          <div className="flex-1 px-2 border-t border-gray-800">
+          {/* Chat history */}
+          <div className="flex-1 px-2 border-t border-white/5 overflow-hidden">
             <ChatHistory />
           </div>
         </div>
 
         {/* User Profile Section */}
-        <div ref={profileMenuRef} className="relative p-4 border-t border-gray-800">
+        <div ref={profileMenuRef} className="relative p-3 border-t border-white/5">
           {isProfileMenuOpen && (
-            <div className="absolute bottom-full mb-2 w-[calc(100%-2rem)] bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-              <ul className="text-sm text-gray-300">
+            <div className="absolute bottom-full mb-2 left-3 right-3 bg-[#0F111A] border border-white/10 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl">
+              <ul className="text-sm text-slate-300 p-1">
                 <li>
                   <Link
                     href="#"
-                    className="flex items-center px-4 py-3 hover:bg-gray-700 transition-colors"
+                    className="flex items-center px-4 py-3 hover:bg-white/5 rounded-xl transition-colors"
                   >
-                    <Smartphone className="w-5 h-5 mr-3" />
+                    <Smartphone className="w-4 h-4 mr-3 text-slate-400" />
                     <span>Download mobile App</span>
                   </Link>
                 </li>
                 <li>
                   <Link
                     href="/settings"
-                    className="flex items-center px-4 py-3 hover:bg-gray-700 transition-colors"
+                    className="flex items-center px-4 py-3 hover:bg-white/5 rounded-xl transition-colors"
                   >
-                    <Settings className="w-5 h-5 mr-3" />
+                    <Settings className="w-4 h-4 mr-3 text-slate-400" />
                     <span>Settings</span>
                   </Link>
                 </li>
                 <li>
                   <Link
                     href="/contact"
-                    className="flex items-center px-4 py-3 hover:bg-gray-700 transition-colors"
+                    className="flex items-center px-4 py-3 hover:bg-white/5 rounded-xl transition-colors"
                   >
-                    <Send className="w-5 h-5 mr-3" />
+                    <Send className="w-4 h-4 mr-3 text-slate-400" />
                     <span>Contact us</span>
                   </Link>
                 </li>
-                <li>
+                <li className="border-t border-white/5 mt-1 pt-1">
                   <button
                     onClick={handleLogout}
-                    className="w-full flex items-center px-4 py-3 bg-gray-700/50 hover:bg-gray-700 transition-colors text-left"
+                    className="w-full flex items-center px-4 py-3 text-pink-400 hover:bg-pink-500/10 rounded-xl transition-colors text-left cursor-pointer"
                   >
-                    <LogOut className="w-5 h-5 mr-3" />
+                    <LogOut className="w-4 h-4 mr-3" />
                     <span>Log out</span>
                   </button>
                 </li>
@@ -222,20 +222,21 @@ export function Navigation() {
           {user ? (
             <button
               onClick={() => setProfileMenuOpen((prev) => !prev)}
-              className="w-full flex items-center text-left rounded-md hover:bg-gray-800 p-2 transition-colors"
+              className="w-full flex items-center text-left rounded-xl hover:bg-white/5 p-2 transition-colors cursor-pointer"
             >
-              <div className="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-white">
+              <div className="flex-shrink-0 h-9 w-9 rounded-full bg-gradient-to-br from-cyan-500 to-indigo-600 flex items-center justify-center font-bold text-white text-sm shadow-[0_0_10px_-2px_rgba(6,182,212,0.4)]">
                 {userInitials}
               </div>
               <div className="flex-1 min-w-0 ml-3">
-                <p className="text-sm font-medium truncate">{userName}</p>
+                <p className="text-sm font-medium truncate text-slate-200">{userName}</p>
+                <p className="text-xs text-slate-500 truncate">Active</p>
               </div>
-              <MoreVertical className="w-5 h-5 text-gray-400 ml-2 flex-shrink-0" />
+              <MoreVertical className="w-4 h-4 text-slate-500 ml-2 flex-shrink-0" />
             </button>
           ) : (
             <Link
               href="/login"
-              className="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-800 rounded-md transition-colors"
+              className="flex items-center px-4 py-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
             >
               <User className="mr-3 h-5 w-5" />
               <span>Login</span>
@@ -244,10 +245,10 @@ export function Navigation() {
         </div>
       </nav>
 
-      {/* Overlay for mobile */}
+      {/* Mobile overlay */}
       {isMobile && isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 md:hidden"
           onClick={() => setIsOpen(false)}
         />
       )}

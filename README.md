@@ -3,7 +3,10 @@
 [![fr](https://img.shields.io/badge/lang-fr-blue.svg)](https://github.com/pogjester/sparring-Partner/blob/main/README.fr.md)
 [![es](https://img.shields.io/badge/lang-es-yellow.svg)](https://github.com/pogjester/sparring-Partner/blob/main/README.es.md)
 
-# Sparring Partner 🤖
+# EvoChat 🤖
+<div align="center">
+  <img src="frontend/public/evochat_logo.png" alt="EvoChat Logo" width="200" />
+</div>
 
 An advanced AI companion system built with Python and Next.js that provides interactive learning, conversation, and personalized assistance. The platform uses a sophisticated graph-based memory system and multiple AI modules to create an engaging and adaptive user experience.
 

@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     # Supabase configuration
     SUPABASE_URL: str
     SUPABASE_KEY: str
+    ENVIRONMENT: str = "development"
     GROQ_API_KEY: str
     ELEVENLABS_API_KEY: str
     ELEVENLABS_VOICE_ID: str
@@ -22,7 +23,7 @@ class Settings(BaseSettings):
     TEXT_MODEL_NAME: str = "llama-3.3-70b-versatile"
     SMALL_TEXT_MODEL_NAME: str = "llama-3.1-8b-instant"
     STT_MODEL_NAME: str = "whisper-large-v3-turbo"
-    TTS_MODEL_NAME: str = "eleven_flash_v2_5"
+    TTS_MODEL_NAME: str = "eleven_multilingual_v2"
     TTI_MODEL_NAME: str = "black-forest-labs/FLUX.1-schnell-Free"
     ITT_MODEL_NAME: str = "meta-llama/llama-4-scout-17b-16e-instruct"
 

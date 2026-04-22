@@ -8,6 +8,7 @@ import {
 import { ChatSession, Message, User } from '@/types';
 import { useRouter } from 'next/navigation';
 import { useNotification } from '@/contexts/NotificationContext';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   createContext,
   ReactNode,
@@ -35,6 +36,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
+  const { user: authUser, loading: authLoading } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -44,9 +46,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const { showNotification } = useNotification();
   const [showUpgrade, setShowUpgrade] = useState(false);
 
-  // Load chat history from API on mount
+  // Sync local user state with auth user
+  useEffect(() => {
+    if (authUser) {
+      setUser(authUser as any);
+    } else {
+      setUser(null);
+    }
+  }, [authUser]);
+
+  // Load chat history from API when auth is ready
   useEffect(() => {
     const loadChatHistory = async () => {
+      if (authLoading || !authUser) return;
+
       try {
         const sessions = await getChatSessions();
         setChatHistory(sessions);
@@ -54,16 +67,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         console.error('Failed to fetch chat history:', error);
       }
     };
-
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Failed to parse user from localStorage:', error);
-        localStorage.removeItem('user');
-      }
-    }
 
     // Check URL for session ID
     const pathSegments = window.location.pathname.split('/');
@@ -74,16 +77,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
 
     loadChatHistory();
-  }, []);
+  }, [authLoading, authUser]);
 
-  // Save user to localStorage when it changes
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem('user', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('user');
-    }
-  }, [user]);
 
   const fetchMessages = async (sid: string) => {
     try {
@@ -98,12 +93,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Load messages when session changes
+  // Load messages when session changes and auth is ready
   useEffect(() => {
-    if (sessionId) {
+    if (sessionId && !authLoading && authUser) {
       fetchMessages(sessionId);
     }
-  }, [sessionId]);
+  }, [sessionId, authLoading, authUser]);
 
   const startNewSession = async () => {
     try {

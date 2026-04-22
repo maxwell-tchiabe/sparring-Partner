@@ -1,40 +1,54 @@
-# Use an appropriate base image
-FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim
+# ============================================================
+# Stage 1 — builder
+# Install system build tools + resolve all Python dependencies
+# ============================================================
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS builder
 
-# Install the project into `/app`
 WORKDIR /app
 
-# Set environment variables (e.g., set Python to run in unbuffered mode)
-ENV PYTHONUNBUFFERED 1
-
-# Install system dependencies for building libraries
-RUN apt-get update && apt-get install -y \
+# Build-time system dependencies (compilers for native extensions)
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     g++ \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy the dependency management files (lock file and pyproject.toml) first
+# Copy dependency manifests first to leverage Docker layer cache
 COPY uv.lock pyproject.toml /app/
 
-# Install the application dependencies
+# Resolve & install all dependencies into a local .venv (no cache to save space)
 RUN uv sync --frozen --no-cache
 
-# Copy your application code into the container
+# Copy application source
 COPY src/ /app/
 
-# Set the virtual environment environment variables
-ENV VIRTUAL_ENV=/app/.venv \
-    PATH="/app/.venv/bin:$PATH"
-
-# Install the package in editable mode
+# Install the package itself in editable mode inside the same .venv
 RUN uv pip install -e .
 
-# Define volume
+# ============================================================
+# Stage 2 — runtime
+# Minimal image: no compilers, no build tools, no uv cache
+# ============================================================
+FROM python:3.13-slim-bookworm AS runtime
+
+WORKDIR /app
+
+# Runtime-only env config
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    VIRTUAL_ENV=/app/.venv \
+    PATH="/app/.venv/bin:$PATH"
+
+# Copy the fully-resolved virtual environment from builder
+COPY --from=builder /app/.venv /app/.venv
+
+# Copy the application source (already installed, just needs the files at runtime)
+COPY --from=builder /app/ai_companion /app/ai_companion
+
+# Persistent data volume (SQLite short-term memory, etc.)
 VOLUME ["/app/data"]
 
-# Expose the port
+# Expose FastAPI port
 EXPOSE 8080
 
-# Run the FastAPI app using uvicorn
-#CMD ["/app/.venv/bin/fastapi", "run", "ai_companion/interfaces/api/main.py", "--port", "8080", "--host", "0.0.0.0"]
+# Start the API server via uvicorn (uses .venv from PATH)
 CMD ["uvicorn", "ai_companion.interfaces.api.main:app", "--host", "0.0.0.0", "--port", "8080"]
