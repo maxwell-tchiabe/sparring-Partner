@@ -1,9 +1,11 @@
 'use client';
+
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotification } from '@/contexts/NotificationContext';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { z } from 'zod'; // For schema validation
+import { z } from 'zod';
+import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { Spinner } from '@/components/logos/Spinner';
 import { GoogleLogo } from '@/components/logos/GoogleLogo';
 
@@ -19,6 +21,7 @@ const authSchema = z.object({
 
 export function AuthForm() {
   const [isLogin, setIsLogin] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -91,130 +94,161 @@ export function AuthForm() {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <div className="bg-white py-8 px-6 shadow rounded-lg">
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
-          {isLogin ? 'Sign In' : 'Sign Up'}
-        </h2>
+    <div className="w-full max-w-[440px] perspective-1000">
+      <div className="relative bg-slate-900/40 backdrop-blur-3xl border border-white/10 rounded-2xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden">
+        {/* Decorative background glow */}
+        <div className="absolute -top-24 -right-24 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
 
-        {errors.form && (
-          <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-md">
-            {errors.form}
-          </div>
-        )}
+        <div className="relative z-10">
+          <h2 className="text-3xl font-black text-center text-white mb-8 tracking-tight">
+            {isLogin ? 'Sign In' : 'Create Account'}
+          </h2>
 
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Email address
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              className={`mt-1 block w-full px-3 py-2 border ${
-                errors.email ? 'border-red-300' : 'border-gray-300'
-              } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
-              placeholder="your@email.com"
-              value={formData.email}
-              onChange={handleChange}
-            />
-            {errors.email && (
-              <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-            )}
-          </div>
-
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete={isLogin ? 'current-password' : 'new-password'}
-              className={`mt-1 block w-full px-3 py-2 border ${
-                errors.password ? 'border-red-300' : 'border-gray-300'
-              } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
-              placeholder={
-                isLogin
-                  ? 'Enter your password'
-                  : 'Create a password (min 8 chars)'
-              }
-              value={formData.password}
-              onChange={handleChange}
-            />
-            {errors.password && (
-              <p className="mt-1 text-sm text-red-600">{errors.password}</p>
-            )}
-            {!isLogin && !errors.password && (
-              <p className="mt-1 text-xs text-gray-500">
-                Must contain 8+ characters, 1 uppercase letter, and 1 number
+          {errors.form && (
+            <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm rounded-xl animate-in fade-in zoom-in duration-300">
+              <p className="flex items-center gap-2">
+                <span className="w-1 h-1 bg-rose-500 rounded-full" />
+                {errors.form}
               </p>
-            )}
-          </div>
+            </div>
+          )}
 
-          <div>
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <div className="space-y-2">
+              <label htmlFor="email" className="block text-xs font-black uppercase tracking-widest text-slate-500 ml-1">
+                Email Address
+              </label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within:text-cyan-400 transition-colors">
+                  <Mail className="h-4 w-4" />
+                </div>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  className={`block w-full pl-11 pr-4 py-3.5 bg-white/[0.03] border ${
+                    errors.email ? 'border-rose-500/50' : 'border-white/10 group-hover:border-white/20'
+                  } rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500/50 transition-all sm:text-sm`}
+                  placeholder="name@company.com"
+                  value={formData.email}
+                  onChange={handleChange}
+                />
+              </div>
+              {errors.email && (
+                <p className="mt-1.5 text-[11px] font-medium text-rose-400 ml-1">{errors.email}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between items-center px-1">
+                <label htmlFor="password" className="block text-xs font-black uppercase tracking-widest text-slate-500">
+                  Password
+                </label>
+                {isLogin && (
+                  <button type="button" className="text-[10px] uppercase tracking-widest font-black text-cyan-500/70 hover:text-cyan-400 transition-colors">
+                    Forgot?
+                  </button>
+                )}
+              </div>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within:text-cyan-400 transition-colors">
+                  <Lock className="h-4 w-4" />
+                </div>
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete={isLogin ? 'current-password' : 'new-password'}
+                  required
+                  className={`block w-full pl-11 pr-12 py-3.5 bg-white/[0.03] border ${
+                    errors.password ? 'border-rose-500/50' : 'border-white/10 group-hover:border-white/20'
+                  } rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500/50 transition-all sm:text-sm`}
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={handleChange}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-slate-300 transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {errors.password && (
+                <p className="mt-1.5 text-[11px] font-medium text-rose-400 ml-1">{errors.password}</p>
+              )}
+              {!isLogin && !errors.password && (
+                <p className="mt-2 text-[10px] text-slate-500 leading-relaxed italic ml-1">
+                  Combine 8+ characters, uppercase & numbers.
+                </p>
+              )}
+            </div>
+
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex cursor-pointer justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
+              className="group relative w-full flex cursor-pointer justify-center py-4 px-4 rounded-xl text-sm font-black uppercase tracking-widest text-white overflow-hidden transition-all active:scale-[0.98] disabled:opacity-70"
             >
-              {loading ? (
-                <span className="flex items-center">
-                  <Spinner className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" />
-                  Processing...
-                </span>
-              ) : isLogin ? (
-                'Sign In'
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-600 to-blue-700 group-hover:from-cyan-500 group-hover:to-blue-600 transition-all" />
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-from),_transparent_70%)] transition-opacity" />
+              
+              <span className="relative flex items-center gap-2">
+                {loading ? (
+                  <>
+                    <Spinner className="animate-spin h-4 w-4 text-white" />
+                    Processing
+                  </>
+                ) : (
+                  <>
+                    {isLogin ? 'Enter System' : 'Initialize Account'}
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </span>
+            </button>
+          </form>
+
+          <div className="mt-8">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-white/5" />
+              </div>
+              <div className="relative flex justify-center text-[10px] font-black uppercase tracking-[0.3em]">
+                <span className="px-4 bg-[#0A0A0F] text-slate-500">Secure Link</span>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <button
+                onClick={signInWithGoogle}
+                className="w-full flex items-center justify-center px-4 py-3 border border-white/10 rounded-xl text-[11px] font-black uppercase tracking-widest text-slate-300 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20 hover:text-white transition-all active:scale-[0.98] cursor-pointer"
+              >
+                <GoogleLogo className="w-4 h-4 mr-3" />
+                Auth with Google
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-8 text-center">
+            <button
+              type="button"
+              onClick={() => {
+                setIsLogin(!isLogin);
+                setErrors({});
+              }}
+              className="text-xs font-bold text-slate-500 hover:text-cyan-400 transition-colors group cursor-pointer"
+            >
+              {isLogin ? (
+                <>New here? <span className="text-cyan-500 group-hover:underline underline-offset-4 decoration-2 decoration-cyan-500/30">Create an identity</span></>
               ) : (
-                'Sign Up'
+                <>Existing member? <span className="text-cyan-500 group-hover:underline underline-offset-4 decoration-2 decoration-cyan-500/30">Access system</span></>
               )}
             </button>
           </div>
-        </form>
-
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or</span>
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <button
-              onClick={signInWithGoogle}
-              className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-            >
-              <GoogleLogo className="w-5 h-5 mr-2" />
-              Continue with Google
-            </button>
-          </div>
-        </div>
-
-        <div className="mt-6 text-center">
-          <button
-            type="button"
-            onClick={() => {
-              setIsLogin(!isLogin);
-              setErrors({});
-            }}
-            className="text-sm cursor-pointer text-indigo-600 hover:text-indigo-500 font-medium"
-          >
-            {isLogin
-              ? 'Need an account? Sign Up'
-              : 'Already have an account? Sign In'}
-          </button>
         </div>
       </div>
     </div>

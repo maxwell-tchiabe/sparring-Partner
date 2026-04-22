@@ -15,6 +15,11 @@ export const metadata: Metadata = {
   title: 'EvoChat - AI Language Learning Assistant',
   description:
     'AI-powered language learning platform with multimodal input and personalized learning',
+  icons: {
+    icon: '/favicon.png',
+    shortcut: '/favicon.png',
+    apple: '/favicon.png',
+  },
 };
 
 export default function RootLayout({
