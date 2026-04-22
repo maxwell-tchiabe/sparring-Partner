@@ -5,6 +5,7 @@ from ai_companion.interfaces.api.routes import chat_router, include_limiter
 from ai_companion.interfaces.api.dashboard import dashboard_router
 from fastapi.middleware.cors import CORSMiddleware
 from ai_companion.core.auth import verify_token
+from ai_companion.interfaces.api.auth import auth_router
 
 import argparse
 from typing import Generator, Tuple
@@ -37,21 +38,37 @@ async def auth_middleware(request: Request, call_next):
     if request.method == "OPTIONS":
         return await call_next(request)
 
-    public_prefixes = ("/api/health", "/docs", "/redoc", "/openapi.json", "/static", "/favicon.ico")
+    public_prefixes = (
+        "/api/health", 
+        "/docs", 
+        "/redoc", 
+        "/openapi.json", 
+        "/static", 
+        "/favicon.ico",
+        "/api/auth/session"  # Allow setting/clearing session without auth
+    )
     if any(request.url.path.startswith(p) for p in public_prefixes):
         return await call_next(request)
 
     try:
-        auth_header = request.headers.get("Authorization")
-        if not auth_header:
-            # No Authorization provided
-            print(f"Auth middleware: missing Authorization header for path {request.url.path}")  # Debug log
+        # Prioritize the HttpOnly cookie
+        token = request.cookies.get("sb-access-token")
+        
+        # Fallback to Authorization header
+        if not token:
+            auth_header = request.headers.get("Authorization")
+            if auth_header and auth_header.startswith("Bearer "):
+                token = auth_header.split(" ")[1]
+
+        if not token:
+            # No token provided
+            print(f"Auth middleware: missing authentication for path {request.url.path}")  # Debug log
             return JSONResponse(
                 status_code=401,
-                content={"details": "No valid authentication token provided."}
+                content={"detail": "Authentication required. No valid token found in cookies or headers."}
             )
 
-        token = auth_header.split(" ")[1]
+        print(f"Token identified (source: {'cookie' if request.cookies.get('sb-access-token') else 'header'})")  # Debug log
         print(f"Token extracted: {token[:10]}...")  # Debug log - only show first 10 chars for security
         
         user_id = verify_token(token)
@@ -78,5 +95,6 @@ async def auth_middleware(request: Request, call_next):
 # Keeping this section as a reminder but the actual registration is at the top.
 app.include_router(chat_router)
 app.include_router(dashboard_router)
+app.include_router(auth_router)
 include_limiter(app)
 

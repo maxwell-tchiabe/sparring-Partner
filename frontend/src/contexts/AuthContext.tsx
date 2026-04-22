@@ -5,6 +5,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { jwtDecode, JwtPayload } from 'jwt-decode';
 import { useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useState } from 'react';
+import { syncSessionWithBackend, clearBackendSession } from '@/services/auth';
 
 type AuthContextType = {
   user: User | null;
@@ -48,16 +49,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       setUserRole(extractUserRole(session));
+      if (session) {
+        syncSessionWithBackend(session.access_token).catch(console.error);
+      }
       setLoading(false);
     });
 
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setUserRole(extractUserRole(session));
+
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        if (session) {
+          await syncSessionWithBackend(session.access_token).catch(console.error);
+        }
+      } else if (event === 'SIGNED_OUT') {
+        await clearBackendSession().catch(console.error);
+      }
+
       setLoading(false);
     });
 
@@ -79,6 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
+    await clearBackendSession().catch(console.error);
     if (error) throw error;
     router.push('/login');
   };

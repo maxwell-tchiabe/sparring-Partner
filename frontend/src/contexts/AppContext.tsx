@@ -55,16 +55,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Failed to parse user from localStorage:', error);
-        localStorage.removeItem('user');
-      }
-    }
-
     // Check URL for session ID
     const pathSegments = window.location.pathname.split('/');
     const urlSessionId = pathSegments[2];
@@ -76,14 +66,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     loadChatHistory();
   }, []);
 
-  // Save user to localStorage when it changes
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem('user', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('user');
-    }
-  }, [user]);
 
   const fetchMessages = async (sid: string) => {
     try {

@@ -21,7 +21,7 @@ class SupabaseManager:
         """Save a new message to the database"""
         try:
             print(f"[DEBUG] Saving message for session: {message.session_id}")
-            message_dict = message.model_dump(by_alias=True)
+            message_dict = message.model_dump(by_alias=False)
             print(f"[DEBUG] Message dict before insert: {message_dict}")
             
             result = self.client.table("messages").insert(message_dict).execute()
@@ -107,7 +107,7 @@ class SupabaseManager:
             session.title = "".join(char for char in session.title if char.isprintable())
             print(f"[DEBUG] Cleaned title: {repr(session.title)}")
             
-            session_dict = session.model_dump(by_alias=True)
+            session_dict = session.model_dump(by_alias=False)
             print(f"[DEBUG] Session dict before insert: {session_dict}")
             
             result = self.client.table("chat_sessions").insert(session_dict).execute()

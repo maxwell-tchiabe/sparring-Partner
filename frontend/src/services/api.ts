@@ -35,6 +35,7 @@ export const createChatSession = async (): Promise<ChatSession> => {
   const response = await fetch(`${API_BASE_URL}/api/chat-sessions`, {
     method: 'POST',
     headers,
+    credentials: 'include',
   });
   if (!response.ok) {
     throw new Error('Failed to create chat session');
@@ -50,7 +51,7 @@ export const getChatSessions = async (
   const url = userId
     ? `${API_BASE_URL}/api/chat-sessions?user_id=${userId}`
     : `${API_BASE_URL}/api/chat-sessions`;
-  const response = await fetch(url, { headers });
+  const response = await fetch(url, { headers, credentials: 'include' });
   if (!response.ok) {
     throw new Error('Failed to fetch chat sessions');
   }
@@ -68,6 +69,7 @@ export const updateChatSession = async (
     {
       method: 'PATCH',
       headers,
+      credentials: 'include',
       body: JSON.stringify(updateData),
     }
   );
@@ -84,6 +86,7 @@ export const deleteChatSession = async (sessionId: string): Promise<void> => {
     {
       method: 'DELETE',
       headers,
+      credentials: 'include',
     }
   );
   if (!response.ok) {
@@ -96,6 +99,7 @@ export const getMessages = async (sessionId: string): Promise<Message[]> => {
   const headers = await getAuthHeaders();
   const response = await fetch(`${API_BASE_URL}/api/messages/${sessionId}`, {
     headers,
+    credentials: 'include',
   });
   if (!response.ok) {
     throw new Error('Failed to fetch messages');
@@ -124,6 +128,7 @@ export const sendMessage = async (
       headers: {
         Authorization: `Bearer ${session.data.session?.access_token || ''}`,
       },
+      credentials: 'include',
       body: formData,
     });
 
@@ -161,6 +166,7 @@ export const sendWebrtcOffer = async (
       Accept: 'application/json',
       Authorization: headers.Authorization,
     },
+    credentials: 'include',
     body: JSON.stringify({
       sdp: offer.sdp,
       type: offer.type,
@@ -182,6 +188,7 @@ export const getDashboardStats = async (
     `${API_BASE_URL}/api/dashboard/stats/${userId}`,
     {
       headers,
+      credentials: 'include',
     }
   );
   if (!response.ok) {
@@ -194,7 +201,7 @@ export const getAIInsights = async (userId: string): Promise<AIInsight[]> => {
   const headers = await getAuthHeaders();
   const response = await fetch(
     `${API_BASE_URL}/api/dashboard/insights/${userId}`,
-    { headers }
+    { headers, credentials: 'include' }
   );
   if (!response.ok) {
     throw new Error('Failed to fetch AI insights');
@@ -206,7 +213,7 @@ export const getUserBadges = async (userId: string): Promise<Badge[]> => {
   const headers = await getAuthHeaders();
   const response = await fetch(
     `${API_BASE_URL}/api/dashboard/badges/${userId}`,
-    { headers }
+    { headers, credentials: 'include' }
   );
   if (!response.ok) {
     throw new Error('Failed to fetch user badges');
@@ -220,7 +227,7 @@ export const getLearningErrors = async (
   const headers = await getAuthHeaders();
   const response = await fetch(
     `${API_BASE_URL}/api/dashboard/errors/${userId}`,
-    { headers }
+    { headers, credentials: 'include' }
   );
   if (!response.ok) {
     throw new Error('Failed to fetch learning errors');
