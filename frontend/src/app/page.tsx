@@ -1,7 +1,7 @@
 'use client';
 import { Layout } from '@/components/layout/Layout';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowRight, BarChart2, MessageSquare, Settings, CheckCircle2, ChevronRight, BrainCircuit } from 'lucide-react';
+import { ArrowRight, BarChart2, MessageSquare, BrainCircuit, CheckCircle2, ChevronRight, Zap, Globe, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function Home() {
@@ -18,81 +18,90 @@ export default function Home() {
 
   return (
     <Layout>
-      {/* Background base */}
-      <div className="bg-[#05050A] text-slate-200 min-h-screen selection:bg-cyan-500/30 font-sans">
-      
+      <div className="bg-[#05050A] text-slate-200 min-h-screen selection:bg-cyan-500/30 font-sans overflow-hidden">
         {/* HERO SECTION */}
-        <section className="relative overflow-hidden pt-24 pb-32 flex items-center justify-center">
-          {/* Neon mesh gradients behind */}
-          <div className="absolute top-[-10%] left-[-10%] w-[40vw] h-[40vw] rounded-full bg-indigo-600/20 blur-[120px] pointer-events-none"></div>
-          <div className="absolute bottom-[20%] right-[-5%] w-[35vw] h-[35vw] rounded-full bg-cyan-500/20 blur-[100px] pointer-events-none"></div>
+        <section className="relative pt-32 pb-40 flex items-center justify-center">
+          {/* Animated Background Mesh Gradients */}
+          <div className="absolute top-[-20%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-indigo-600/20 blur-[150px] mix-blend-screen pointer-events-none animate-pulse duration-10000"></div>
+          <div className="absolute bottom-[10%] right-[-10%] w-[40vw] h-[40vw] rounded-full bg-cyan-500/20 blur-[120px] mix-blend-screen pointer-events-none animate-pulse duration-7000"></div>
           
           <div className="max-w-7xl mx-auto px-6 relative z-10 w-full">
-            <div className="flex flex-col lg:flex-row items-center gap-16">
+            <div className="flex flex-col lg:flex-row items-center gap-20">
               
-              <div className="lg:w-1/2 flex flex-col items-start">
-                <div className="inline-flex items-center rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-1.5 text-sm text-indigo-300 font-medium mb-8 backdrop-blur-md">
-                  <span className="flex h-2 w-2 rounded-full bg-indigo-400 mr-2 animate-pulse"></span>
-                  Next-Gen Cognitive System
+              <div className="lg:w-1/2 flex flex-col items-start z-20">
+                <div className="inline-flex items-center rounded-full border border-cyan-500/30 bg-cyan-500/10 px-5 py-2 text-sm text-cyan-300 font-semibold mb-8 backdrop-blur-md shadow-[0_0_20px_-5px_rgba(6,182,212,0.3)]">
+                  <span className="flex h-2.5 w-2.5 rounded-full bg-cyan-400 mr-3 animate-ping"></span>
+                  <span className="flex h-2.5 w-2.5 rounded-full bg-cyan-400 absolute mr-3"></span>
+                  EvoChat Cognitive Engine 2.0
                 </div>
                 
-                <h1 className="text-5xl lg:text-7xl font-extrabold tracking-tight mb-6 text-white leading-tight">
-                  Master Languages with <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-500">EvoChat</span>.
+                <h1 className="text-6xl lg:text-8xl font-extrabold tracking-tighter mb-8 text-white leading-[1.05]">
+                  Learn with <br/>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 drop-shadow-sm">Absolute Clarity.</span>
                 </h1>
                 
-                <p className="text-xl text-slate-400 mb-10 max-w-xl leading-relaxed">
-                  Your intelligent companion that remembers your mistakes, adapts to your accent, and accelerates your fluency. Welcome to the future of learning.
+                <p className="text-2xl text-slate-400 mb-10 max-w-xl leading-relaxed font-light">
+                  Your intelligent companion that remembers your mistakes, adapts to your accent, and accelerates your fluency organically.
                 </p>
                 
-                <div className="flex flex-wrap items-center gap-5">
+                <div className="flex flex-wrap items-center gap-6">
                   <button
                     onClick={() => handleProtectedAction('/chat')}
-                    className="group relative inline-flex items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-cyan-500 to-indigo-600 px-8 py-4 font-bold text-white shadow-[0_0_40px_-10px_rgba(56,189,248,0.5)] transition-all hover:scale-[1.02] hover:shadow-[0_0_60px_-15px_rgba(56,189,248,0.6)] cursor-pointer"
+                    className="group relative inline-flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-cyan-500 to-indigo-600 px-10 py-5 font-bold text-white shadow-[0_0_40px_-10px_rgba(6,182,212,0.5)] transition-all hover:scale-105 hover:shadow-[0_0_60px_-15px_rgba(6,182,212,0.7)] cursor-pointer"
                   >
-                    <span className="mr-2">Start Learning Free</span>
-                    <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out"></div>
+                    <span className="relative z-10 text-lg">Start Free Trial</span>
+                    <ArrowRight className="h-6 w-6 ml-3 relative z-10 transition-transform group-hover:translate-x-2" />
                   </button>
                   <button
                     onClick={() => handleProtectedAction('/dashboard')}
-                    className="inline-flex items-center justify-center px-8 py-4 rounded-xl font-semibold text-slate-300 border border-slate-700 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer"
+                    className="inline-flex items-center justify-center px-10 py-5 rounded-full font-semibold text-slate-300 border border-white/10 hover:bg-white/5 hover:text-white hover:border-white/20 transition-all cursor-pointer backdrop-blur-sm text-lg"
                   >
-                    View Dashboard
+                    View Tour
                   </button>
                 </div>
               </div>
               
-              {/* Glassmorphism Chat Mockup */}
-              <div className="lg:w-1/2 w-full lg:mt-0 mt-12 relative perspective-1000">
-                <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/20 to-indigo-500/20 blur-3xl transform scale-90 pointer-events-none"></div>
+              {/* Premium Glassmorphism Chat Mockup */}
+              <div className="lg:w-1/2 w-full mt-16 lg:mt-0 relative perspective-1000 z-10">
+                <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/30 to-indigo-600/30 blur-3xl transform scale-95 pointer-events-none rounded-[3rem]"></div>
                 
-                <div className="relative rounded-2xl bg-[#0F111A]/80 backdrop-blur-xl border border-white/10 shadow-2xl overflow-hidden p-6 hover:-translate-y-2 transition-transform duration-500">
-                  <div className="flex items-center justify-between border-b border-white/5 pb-4 mb-4">
+                <div className="relative rounded-[2.5rem] bg-[#0A0A0F]/80 backdrop-blur-2xl border border-white/10 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.5)] shadow-indigo-500/10 overflow-hidden p-8 hover:-translate-y-4 transition-transform duration-700">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 to-indigo-500 opacity-50"></div>
+                  
+                  <div className="flex items-center justify-between border-b border-white/5 pb-6 mb-6">
                     <div className="flex items-center space-x-3">
-                      <div className="flex space-x-1.5">
-                        <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
-                        <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
-                        <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
+                      <div className="flex space-x-2">
+                        <div className="w-3.5 h-3.5 rounded-full bg-red-500/80 shadow-[0_0_10px_rgba(239,68,68,0.5)]"></div>
+                        <div className="w-3.5 h-3.5 rounded-full bg-yellow-500/80 shadow-[0_0_10px_rgba(234,179,8,0.5)]"></div>
+                        <div className="w-3.5 h-3.5 rounded-full bg-green-500/80 shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
                       </div>
                     </div>
-                    <div className="text-xs text-slate-500 font-mono tracking-wider">EVOCHAT / FRENCH_MODULE</div>
+                    <div className="flex items-center gap-2 text-xs text-cyan-400/80 font-mono tracking-widest font-bold tracking-[0.2em] bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
+                      <Zap className="w-3 h-3" />
+                      FRENCH ALGORITHM
+                    </div>
                   </div>
                   
-                  <div className="space-y-6">
+                  <div className="space-y-8">
                     {/* User Msg */}
                     <div className="flex justify-end">
-                      <div className="bg-indigo-600 text-white p-4 rounded-2xl rounded-tr-sm max-w-[85%] shadow-lg">
-                        <p className="text-sm leading-relaxed">I'd like to practice ordering food in French.</p>
+                      <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white p-5 rounded-3xl rounded-tr-sm max-w-[85%] shadow-lg shadow-indigo-600/20 transform transition-transform hover:scale-[1.02]">
+                        <p className="text-base leading-relaxed tracking-wide font-medium">I'd like to practice ordering food in French.</p>
                       </div>
                     </div>
                     {/* EvoChat Msg */}
                     <div className="flex justify-start">
-                      <div className="flex items-end gap-3 max-w-[85%]">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-indigo-500 flex items-center justify-center shrink-0">
-                          <BrainCircuit className="w-4 h-4 text-white" />
+                      <div className="flex items-end gap-4 max-w-[90%]">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-indigo-500 flex items-center justify-center shrink-0 shadow-[0_0_20px_-5px_rgba(6,182,212,0.5)]">
+                          <BrainCircuit className="w-5 h-5 text-white drop-shadow-md" />
                         </div>
-                        <div className="bg-slate-800/80 backdrop-blur-sm border border-white/5 text-slate-200 p-4 rounded-2xl rounded-tl-sm shadow-lg">
-                          <p className="text-sm font-medium mb-1 text-white">Bien sûr ! 🥐</p>
-                          <p className="text-sm text-slate-300 leading-relaxed">Nous sommes à la boulangerie. Que dites-vous pour demander une baguette s'il vous plaît ?</p>
+                        <div className="bg-slate-900/90 backdrop-blur-md border border-white/10 text-slate-200 p-6 rounded-3xl rounded-tl-sm shadow-xl transform transition-transform hover:scale-[1.02]">
+                          <p className="text-base font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 flex items-center gap-2">
+                            <Globe className="w-4 h-4 text-cyan-400" />
+                            Paris, Bakery Simulation
+                          </p>
+                          <p className="text-base text-slate-300 leading-relaxed">Bien sûr ! 🥐 Vous êtes à la boulangerie. Que dites-vous pour demander une baguette ?</p>
                         </div>
                       </div>
                     </div>
@@ -104,73 +113,86 @@ export default function Home() {
         </section>
 
         {/* BENTO GRID: Features Section */}
-        <section className="py-32 relative border-t border-white/5 bg-slate-950/50">
+        <section className="py-40 relative">
+          <div className="absolute inset-0 bg-[#0A0AD0]/5 border-t border-white/5 skew-y-3 transform origin-top-left -z-10"></div>
+          
           <div className="max-w-7xl mx-auto px-6 relative z-10">
-            <div className="text-center max-w-2xl mx-auto mb-20">
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white tracking-tight">Not just a bot. <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">A Cognitive System.</span></h2>
-              <p className="text-slate-400 text-xl leading-relaxed">Standard apps teach you vocabulary. EvoChat learns how you think, tracks your long-term memory, and guides you to absolute fluency.</p>
+            <div className="text-center max-w-3xl mx-auto mb-24">
+              <h2 className="text-5xl md:text-6xl font-extrabold mb-8 text-white tracking-tighter">Beyond flashcards. <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 drop-shadow-sm">A Cognitive Ecosystem.</span></h2>
+              <p className="text-slate-400 text-xl md:text-2xl leading-relaxed font-light">EvoChat doesn't just grade right or wrong. It maps your syntax, understands your logic gaps, and rewires your long-term memory.</p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Feature 1 (Large) */}
-              <div className="md:col-span-2 group rounded-3xl bg-slate-900/50 backdrop-blur-sm border border-slate-800 hover:border-slate-700 p-10 transition-all duration-300 hover:shadow-[0_0_40px_-10px_rgba(79,70,229,0.15)] flex flex-col justify-between overflow-hidden relative">
-                <div className="absolute -right-20 -top-20 w-64 h-64 bg-indigo-500/10 blur-[80px] rounded-full transition-opacity group-hover:opacity-100 opacity-50"></div>
-                <div className="z-10">
-                  <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 flex items-center justify-center mb-8 border border-indigo-500/20 group-hover:scale-110 transition-transform">
-                    <MessageSquare className="w-7 h-7 text-indigo-400" />
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              {/* Feature 1 (Large 2x2 style) */}
+              <div className="md:col-span-2 md:row-span-2 group rounded-[2.5rem] bg-[#0A0A0F]/80 backdrop-blur-2xl border border-white/10 hover:border-indigo-500/50 p-12 transition-all duration-500 hover:shadow-[0_0_80px_-20px_rgba(79,70,229,0.2)] hover:-translate-y-2 flex flex-col overflow-hidden relative">
+                <div className="absolute -right-20 -top-20 w-80 h-80 bg-indigo-500/20 blur-[100px] rounded-full transition-opacity group-hover:opacity-100 opacity-50"></div>
+                <div className="z-10 flex flex-col h-full justify-between">
+                  <div>
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-indigo-600/10 flex items-center justify-center mb-10 border border-indigo-500/30 group-hover:scale-110 transition-transform duration-500 shadow-inner">
+                      <MessageSquare className="w-8 h-8 text-indigo-400 drop-shadow-md" />
+                    </div>
+                    <h3 className="text-3xl font-extrabold text-white mb-6 tracking-tight">Multimodal Perception</h3>
+                    <p className="text-slate-400 text-xl leading-relaxed font-light">Speak natively, share screenshots, or drop in PDFs. EvoChat seamlessly interprets visual, auditory, and textual data to build high-context interactions.</p>
                   </div>
-                  <h3 className="text-2xl font-bold text-white mb-4">Multimodal Perception</h3>
-                  <p className="text-slate-400 text-lg leading-relaxed max-w-md">Speak naturally with voice integration, share your screen, send PDFs or images. EvoChat sees, hears, and reads exactly what you do to provide hyper-contextual learning.</p>
+                  <div className="mt-12 opacity-80 group-hover:opacity-100 transition-opacity p-6 bg-white/5 rounded-2xl border border-white/5 font-mono text-sm text-cyan-300">
+                    <div>&gt; INITIALIZING AUDIO STREAM...</div>
+                    <div className="mt-2 text-indigo-300">&gt; DETECTING ACCENT: NATIVE</div>
+                    <div className="mt-2 text-pink-300">&gt; GENERATING CONTEXTUAL REPLY...</div>
+                  </div>
                 </div>
               </div>
               
-              {/* Feature 2 (Small) */}
-              <div className="group rounded-3xl bg-slate-900/50 backdrop-blur-sm border border-slate-800 hover:border-slate-700 p-10 transition-all duration-300 hover:shadow-[0_0_40px_-10px_rgba(6,182,212,0.15)] relative overflow-hidden">
-                <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-cyan-500/10 blur-[60px] rounded-full transition-opacity group-hover:opacity-100 opacity-0"></div>
-                <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 flex items-center justify-center mb-8 border border-cyan-500/20 group-hover:scale-110 transition-transform">
-                  <BrainCircuit className="w-7 h-7 text-cyan-400" />
+              {/* Feature 2 (Top Right) */}
+              <div className="md:col-span-2 group rounded-[2.5rem] bg-[#0A0A0F]/80 backdrop-blur-2xl border border-white/10 hover:border-cyan-500/50 p-10 transition-all duration-500 hover:shadow-[0_0_60px_-20px_rgba(6,182,212,0.2)] hover:-translate-y-2 relative overflow-hidden flex flex-col md:flex-row items-center gap-8">
+                <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-cyan-500/20 blur-[80px] rounded-full transition-opacity group-hover:opacity-100 opacity-0"></div>
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 flex flex-shrink-0 items-center justify-center border border-cyan-500/30 group-hover:scale-110 transition-transform duration-500">
+                  <BrainCircuit className="w-8 h-8 text-cyan-400 drop-shadow-md" />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-4">Long-Term Memory</h3>
-                <p className="text-slate-400 leading-relaxed">Powered by Vector databases to remember your persistent errors across sessions and days.</p>
+                <div className="z-10">
+                  <h3 className="text-2xl font-bold text-white mb-3 tracking-tight">Vector Memory</h3>
+                  <p className="text-slate-400 text-lg leading-relaxed font-light">State tracking across all sessions. EvoChat organically brings up mistakes you made days ago.</p>
+                </div>
               </div>
               
-              {/* Feature 3 (Small) */}
-              <div className="group rounded-3xl bg-slate-900/50 backdrop-blur-sm border border-slate-800 hover:border-slate-700 p-10 transition-all duration-300 hover:shadow-[0_0_40px_-10px_rgba(236,72,153,0.15)] relative overflow-hidden">
-                 <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-pink-500/10 blur-[60px] rounded-full transition-opacity group-hover:opacity-100 opacity-0"></div>
-                <div className="w-14 h-14 rounded-2xl bg-pink-500/10 flex items-center justify-center mb-8 border border-pink-500/20 group-hover:scale-110 transition-transform">
-                  <BarChart2 className="w-7 h-7 text-pink-400" />
+              {/* Feature 3 (Bottom Left - Small) */}
+              <div className="group rounded-[2.5rem] bg-[#0A0A0F]/80 backdrop-blur-2xl border border-white/10 hover:border-pink-500/50 p-10 transition-all duration-500 hover:shadow-[0_0_60px_-20px_rgba(236,72,153,0.2)] hover:-translate-y-2 relative overflow-hidden">
+                 <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-pink-500/20 blur-[80px] rounded-full transition-opacity group-hover:opacity-100 opacity-0"></div>
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-pink-500/20 to-pink-600/10 flex items-center justify-center mb-8 border border-pink-500/30 group-hover:scale-110 transition-transform duration-500">
+                  <BarChart2 className="w-7 h-7 text-pink-400 drop-shadow-md" />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-4">Live Insights</h3>
-                <p className="text-slate-400 leading-relaxed">Your dashboard adapts to your logic, giving you real-time progression graphs and weak-point analysis.</p>
+                <h3 className="text-xl font-bold text-white mb-3">Live Insights</h3>
+                <p className="text-slate-400 font-light leading-relaxed">Real-time gap analysis and neuro-tracking dashboards.</p>
               </div>
 
-              {/* Feature 4 (Large / CTA) */}
-              <div className="md:col-span-2 group rounded-3xl bg-gradient-to-r from-slate-900/80 to-indigo-900/20 backdrop-blur-sm border border-slate-800 hover:border-indigo-500/30 p-10 transition-all duration-300 flex flex-col md:flex-row items-start md:items-center justify-between cursor-pointer" onClick={() => handleProtectedAction('/chat')}>
-                <div className="mb-6 md:mb-0">
-                  <h3 className="text-3xl font-bold text-white mb-2">Ready to evolve?</h3>
-                  <p className="text-indigo-200 text-lg">Join the waitlist or initialize your first session immediately.</p>
+               {/* Feature 4 (Bottom Right - Small) */}
+               <div className="group rounded-[2.5rem] bg-[#0A0A0F]/80 backdrop-blur-2xl border border-white/10 hover:border-emerald-500/50 p-10 transition-all duration-500 hover:shadow-[0_0_60px_-20px_rgba(16,185,129,0.2)] hover:-translate-y-2 relative overflow-hidden">
+                 <div className="absolute -right-10 -top-10 w-40 h-40 bg-emerald-500/20 blur-[80px] rounded-full transition-opacity group-hover:opacity-100 opacity-0"></div>
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 flex items-center justify-center mb-8 border border-emerald-500/30 group-hover:scale-110 transition-transform duration-500">
+                  <Sparkles className="w-7 h-7 text-emerald-400 drop-shadow-md" />
                 </div>
-                <div className="flex items-center justify-center w-16 h-16 rounded-full bg-white text-slate-900 group-hover:bg-indigo-500 group-hover:text-white transition-all shadow-[0_0_20px_-5px_rgba(255,255,255,0.4)]">
-                  <ChevronRight className="w-8 h-8 group-hover:translate-x-1 transition-transform" />
-                </div>
+                <h3 className="text-xl font-bold text-white mb-3">Adaptive UX</h3>
+                <p className="text-slate-400 font-light leading-relaxed">Pacing adapts dynamically to cognitive load patterns.</p>
               </div>
             </div>
           </div>
         </section>
 
         {/* TESTIMONIALS SECTION */}
-        <section className="py-32 relative border-t border-white/5 bg-[#08080C]">
+        <section className="py-40 relative">
           <div className="max-w-7xl mx-auto px-6">
-            <h2 className="text-4xl font-bold text-center mb-20 text-white tracking-tight">Trust the <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400">Network</span></h2>
+            <div className="flex flex-col items-center mb-24">
+              <div className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm text-slate-300 font-medium mb-6">Verified Intelligence</div>
+              <h2 className="text-5xl md:text-6xl font-extrabold text-center text-white tracking-tighter">Trust the <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400">Network</span></h2>
+            </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
               <TestimonialCard
-                quote="I've tried every language app on the market. EvoChat is the only one that actually feels like a living, breathing tutor analyzing my logic in real time."
+                quote="I've tried every language app on the market. EvoChat is the only one that actually feels like a living, breathing tutor analyzing my logic in real time. It's wildly different."
                 author="Sarah B."
                 role="Advanced Polyglot"
               />
               <TestimonialCard
-                quote="The insights dashboard caught grammar mistakes I've been making for 5 years. It doesn't just correct you, it explains your cognitive blind spots."
+                quote="The insights dashboard caught grammar mistakes I've been making for 5 years. It doesn't just correct you, it maps out your cognitive blind spots."
                 author="Michael T."
                 role="Bilingual Professional"
               />
@@ -178,23 +200,30 @@ export default function Home() {
           </div>
         </section>
 
-        {/* CTA SECTION */}
-        <section className="py-40 relative flex items-center justify-center">
-          {/* Subtle glow behind the CTA */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-indigo-950/20 to-[#0A0A0F] pointer-events-none"></div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] md:w-[30vw] md:h-[30vw] rounded-full bg-cyan-500/10 blur-[120px] pointer-events-none"></div>
+        {/* MASSIVE CTA SECTION */}
+        <section className="py-48 relative flex items-center justify-center">
+          {/* Intense Glow Base */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#05050A] via-[#05050A] to-transparent z-0"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] md:w-[50vw] md:h-[50vw] rounded-full bg-gradient-to-r from-cyan-600/20 to-indigo-600/20 blur-[150px] mix-blend-screen pointer-events-none"></div>
           
-          <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
-            <h2 className="text-5xl md:text-6xl font-extrabold mb-8 text-white tracking-tight">Start Your Evolution.</h2>
-            <p className="text-xl md:text-2xl text-slate-400 mb-12 max-w-2xl mx-auto leading-relaxed">Stop memorizing static flashcards. Experience the first truly cognitive language partner.</p>
-            
-            <button
-              onClick={() => handleProtectedAction('/chat')}
-              className="group inline-flex items-center justify-center px-10 py-5 rounded-2xl bg-white text-slate-950 font-bold text-lg hover:bg-slate-100 transition-all cursor-pointer shadow-[0_0_40px_-5px_rgba(255,255,255,0.2)] hover:shadow-[0_0_60px_-5px_rgba(255,255,255,0.3)] hover:-translate-y-1"
-            >
-              Initialize Session
-              <ArrowRight className="ml-3 h-6 w-6 transition-transform group-hover:translate-x-1" />
-            </button>
+          <div className="max-w-4xl mx-auto px-6 text-center relative z-10 w-full">
+            <div className="p-16 md:p-24 rounded-[3rem] bg-[#0A0A0F]/40 backdrop-blur-3xl border border-white/10 shadow-[0_0_100px_rgba(0,0,0,0.5)] shadow-cyan-500/10 relative overflow-hidden">
+               <div className="absolute -top-40 -right-40 w-80 h-80 bg-indigo-500/20 blur-[100px] rounded-full"></div>
+               <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-cyan-500/20 blur-[100px] rounded-full"></div>
+               
+              <div className="relative z-10">
+                <h2 className="text-6xl md:text-7xl font-extrabold mb-8 text-white tracking-tighter leading-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400">Execute <br/>Evolution.</h2>
+                <p className="text-2xl text-slate-400 mb-12 max-w-2xl mx-auto leading-relaxed font-light">Stop memorizing static data. Interface directly with the premier cognitive language partner.</p>
+                
+                <button
+                  onClick={() => handleProtectedAction('/chat')}
+                  className="group inline-flex items-center justify-center px-12 py-6 rounded-full bg-white text-slate-950 font-bold text-xl hover:bg-slate-100 transition-all cursor-pointer shadow-[0_0_50px_-5px_rgba(255,255,255,0.3)] hover:shadow-[0_0_80px_rgba(255,255,255,0.5)] hover:-translate-y-2 hover:scale-[1.02]"
+                >
+                  INITIALIZE SESSION
+                  <ArrowRight className="ml-4 h-7 w-7 transition-transform duration-300 group-hover:translate-x-2" />
+                </button>
+              </div>
+            </div>
           </div>
         </section>
         
@@ -213,21 +242,21 @@ function TestimonialCard({
   role: string;
 }) {
   return (
-    <div className="bg-slate-900/30 backdrop-blur-md border border-slate-800 hover:border-slate-700 rounded-3xl p-10 relative transition-colors duration-300">
-      <MessageSquare className="absolute top-10 right-10 w-12 h-12 text-white/5" />
-      <div className="flex items-center space-x-1.5 mb-8 text-cyan-400">
+    <div className="bg-[#0A0A0F]/50 backdrop-blur-xl border border-white/10 hover:border-cyan-500/30 rounded-[2.5rem] p-12 relative transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-10px_rgba(6,182,212,0.1)] group">
+      <MessageSquare className="absolute top-12 right-12 w-20 h-20 text-white/5 transition-colors group-hover:text-cyan-500/5 rotate-12" />
+      <div className="flex items-center space-x-2 mb-10 text-cyan-400">
         {[1, 2, 3, 4, 5].map((i) => (
-          <CheckCircle2 key={i} className="w-5 h-5 fill-cyan-400/20" />
+          <CheckCircle2 key={i} className="w-6 h-6 fill-cyan-400/20 stroke-cyan-400 drop-shadow-sm" />
         ))}
       </div>
-      <p className="text-slate-300 text-xl leading-relaxed mb-10 italic">"{quote}"</p>
+      <p className="text-slate-300 text-2xl leading-relaxed mb-12 font-light tracking-wide relative z-10">"{quote}"</p>
       <div className="flex items-center">
-        <div className="w-14 h-14 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center flex-shrink-0 shadow-lg">
-          <span className="text-slate-300 font-bold text-lg">{author[0]}</span>
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-white/10 flex items-center justify-center flex-shrink-0 shadow-xl group-hover:border-cyan-500/50 transition-colors">
+          <span className="text-white font-extrabold text-xl">{author[0]}</span>
         </div>
-        <div className="ml-5">
-          <p className="text-white font-bold text-lg">{author}</p>
-          <p className="text-md text-cyan-500/80 font-medium">{role}</p>
+        <div className="ml-6">
+          <p className="text-white font-bold text-xl mb-1">{author}</p>
+          <p className="text-sm text-cyan-400 font-semibold tracking-wide uppercase">{role}</p>
         </div>
       </div>
     </div>
