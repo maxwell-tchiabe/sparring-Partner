@@ -110,8 +110,8 @@ export function Header() {
 
       {/* Mobile Navigation */}
       <div 
-        className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-          mobileMenuOpen ? 'max-h-96 border-b border-white/10 opacity-100' : 'max-h-0 opacity-0'
+        className={`md:hidden transition-all duration-300 ease-in-out ${
+          mobileMenuOpen ? 'max-h-[calc(100dvh-5rem)] overflow-y-auto border-b border-white/10 opacity-100' : 'max-h-0 overflow-hidden opacity-0'
         } bg-[#0A0A0F]/95 backdrop-blur-3xl`}
       >
         <div className="px-4 pt-2 pb-6 space-y-1">

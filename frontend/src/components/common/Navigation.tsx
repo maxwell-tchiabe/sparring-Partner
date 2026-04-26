@@ -170,7 +170,7 @@ export function Navigation() {
 
           {/* Chat history */}
           <div className="flex-1 px-2 border-t border-white/5 overflow-hidden">
-            <ChatHistory />
+            <ChatHistory onChatSelect={() => isMobile && setIsOpen(false)} />
           </div>
         </div>
 
