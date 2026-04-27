@@ -9,7 +9,7 @@ import { Check, Edit2, Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-export const ChatHistory = () => {
+export const ChatHistory = ({ onChatSelect }: { onChatSelect?: () => void }) => {
   const {
     chatHistory,
     sessionId,
@@ -30,6 +30,7 @@ export const ChatHistory = () => {
     if (editingId) return;
     setSessionId(selectedSessionId);
     router.push(`/chat/${selectedSessionId}`);
+    if (onChatSelect) onChatSelect();
   };
 
   const startEditing = (session: { id: string; title: string }) => {
@@ -157,7 +158,7 @@ export const ChatHistory = () => {
                     </div>
                   </div>
 
-                  <div className={`flex-shrink-0 ml-1 ${openMenuId === session.id ? 'visible' : 'invisible group-hover:visible'}`}>
+                  <div className={`flex-shrink-0 flex items-center ml-1 ${openMenuId === session.id ? 'visible' : 'visible md:invisible md:group-hover:visible'}`}>
                     <div className="flex items-center gap-0.5">
                       <button
                         onClick={(e) => { e.stopPropagation(); startEditing(session); }}

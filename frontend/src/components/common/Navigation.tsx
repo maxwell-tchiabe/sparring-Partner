@@ -21,6 +21,7 @@ import {
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+import { ComingSoonBadge } from './ComingSoonBadge';
 
 export function Navigation() {
   const pathname = usePathname();
@@ -62,7 +63,14 @@ export function Navigation() {
     };
   }, [profileMenuRef]);
 
-  if (pathname === '/' || pathname === '/login') {
+  if (
+    pathname === '/' ||
+    pathname === '/login' ||
+    pathname === '/reset-password' ||
+    pathname === '/terms' ||
+    pathname === '/privacy' ||
+    pathname === '/impressum'
+  ) {
     return null;
   }
 
@@ -133,24 +141,39 @@ export function Navigation() {
               {navItems.map((item) => {
                 if (item.adminOnly && userRole !== 'admin') return null;
                 const isActive = pathname === item.href;
+                const isComingSoon = item.name === 'Voice Assistant';
+
+                const content = (
+                  <>
+                    <item.icon className={cn('mr-3 h-5 w-5', isActive ? 'text-cyan-400' : 'text-slate-500', isComingSoon && 'text-slate-700')} />
+                    <span>{item.name}</span>
+                    {isComingSoon && <ComingSoonBadge />}
+                    {isActive && !isComingSoon && (
+                      <span className="ml-auto h-1.5 w-1.5 rounded-full bg-cyan-400"></span>
+                    )}
+                  </>
+                );
+
                 return (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      onClick={() => isMobile && setIsOpen(false)}
-                      className={cn(
-                        'flex items-center px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200',
-                        isActive
-                          ? 'bg-gradient-to-r from-indigo-600/30 to-cyan-600/10 text-cyan-400 border border-cyan-500/20'
-                          : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
-                      )}
-                    >
-                      <item.icon className={cn('mr-3 h-5 w-5', isActive ? 'text-cyan-400' : 'text-slate-500')} />
-                      <span>{item.name}</span>
-                      {isActive && (
-                        <span className="ml-auto h-1.5 w-1.5 rounded-full bg-cyan-400"></span>
-                      )}
-                    </Link>
+                  <li key={item.name}>
+                    {isComingSoon ? (
+                      <div className="flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 cursor-not-allowed select-none transition-all duration-200">
+                        {content}
+                      </div>
+                    ) : (
+                      <Link
+                        href={item.href}
+                        onClick={() => isMobile && setIsOpen(false)}
+                        className={cn(
+                          'flex items-center px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200',
+                          isActive
+                            ? 'bg-gradient-to-r from-indigo-600/30 to-cyan-600/10 text-cyan-400 border border-cyan-500/20'
+                            : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                        )}
+                      >
+                        {content}
+                      </Link>
+                    )}
                   </li>
                 );
               })}
@@ -170,7 +193,7 @@ export function Navigation() {
 
           {/* Chat history */}
           <div className="flex-1 px-2 border-t border-white/5 overflow-hidden">
-            <ChatHistory />
+            <ChatHistory onChatSelect={() => isMobile && setIsOpen(false)} />
           </div>
         </div>
 
@@ -180,31 +203,25 @@ export function Navigation() {
             <div className="absolute bottom-full mb-2 left-3 right-3 bg-[#0F111A] border border-white/10 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl">
               <ul className="text-sm text-slate-300 p-1">
                 <li>
-                  <Link
-                    href="#"
-                    className="flex items-center px-4 py-3 hover:bg-white/5 rounded-xl transition-colors"
-                  >
-                    <Smartphone className="w-4 h-4 mr-3 text-slate-400" />
-                    <span>Download mobile App</span>
-                  </Link>
+                  <div className="flex items-center px-4 py-3 text-slate-600 cursor-not-allowed select-none">
+                    <Smartphone className="w-4 h-4 mr-3 text-slate-700" />
+                    <span>Download App</span>
+                    <ComingSoonBadge />
+                  </div>
                 </li>
                 <li>
-                  <Link
-                    href="/settings"
-                    className="flex items-center px-4 py-3 hover:bg-white/5 rounded-xl transition-colors"
-                  >
-                    <Settings className="w-4 h-4 mr-3 text-slate-400" />
+                  <div className="flex items-center px-4 py-3 text-slate-600 cursor-not-allowed select-none">
+                    <Settings className="w-4 h-4 mr-3 text-slate-700" />
                     <span>Settings</span>
-                  </Link>
+                    <ComingSoonBadge />
+                  </div>
                 </li>
                 <li>
-                  <Link
-                    href="/contact"
-                    className="flex items-center px-4 py-3 hover:bg-white/5 rounded-xl transition-colors"
-                  >
-                    <Send className="w-4 h-4 mr-3 text-slate-400" />
+                  <div className="flex items-center px-4 py-3 text-slate-600 cursor-not-allowed select-none">
+                    <Send className="w-4 h-4 mr-3 text-slate-700" />
                     <span>Contact us</span>
-                  </Link>
+                    <ComingSoonBadge />
+                  </div>
                 </li>
                 <li className="border-t border-white/5 mt-1 pt-1">
                   <button

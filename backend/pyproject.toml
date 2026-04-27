@@ -3,9 +3,8 @@ name = "ai-companion"
 version = "0.1.0"
 description = "Your own AI buddy"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 dependencies = [
-    "chainlit>=1.3.2",
     "elevenlabs>=2.8.2",
     "fastapi[standard]>=0.115.6",
     "groq>=0.13.1",
@@ -17,10 +16,7 @@ dependencies = [
     "langgraph>=0.2.60",
     "langchain-openai>=0.2.14",
     "pydantic-settings>=2.7.0",
-    "pre-commit>=4.0.1",
     "supabase>=2.11.0",
-    "langgraph-checkpoint-duckdb>=2.0.1",
-    "duckdb>=1.1.3",
     "langgraph-checkpoint-sqlite>=2.0.1",
     "aiosqlite>=0.20.0",
     "qdrant-client>=1.12.1",
@@ -28,9 +24,22 @@ dependencies = [
     "motor>=3.7.0",
     "pymongo>=4.12.0",
     "python-jose[cryptography]>=3.4.0",
-    "fastrtc[stt,tts,vad]>=0.0.25",
     "loguru>=0.7.3",
     "langchain-tavily>=0.2.0",
-    "twilio>=9.6.2",
     "slowapi>=0.1.9",
 ]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.0.1",
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+torchaudio = { index = "pytorch-cpu" }
+torchvision = { index = "pytorch-cpu" }

@@ -19,11 +19,12 @@ async def set_session(response: Response, request_data: SessionRequest):
     Sets the Supabase access and refresh tokens as HttpOnly cookies.
     """
     try:
-        # Configuration for both cookies
+        is_production = settings.ENVIRONMENT == "production"
+        
         cookie_params = {
             "httponly": True,
-            "secure": settings.ENVIRONMENT == "production",
-            "samesite": "none",
+            "secure": is_production,
+            "samesite": "none" if is_production else "lax",
             "path": "/",
             "max_age": 604800
         }
@@ -70,9 +71,10 @@ async def clear_session(response: Response):
     Clears the Supabase session cookies.
     """
     try:
-        # Clear both cookies
-        response.delete_cookie(key=ACCESS_TOKEN_COOKIE, path="/", httponly=True, samesite="lax", secure=settings.ENVIRONMENT == "production")
-        response.delete_cookie(key=REFRESH_TOKEN_COOKIE, path="/", httponly=True, samesite="lax", secure=settings.ENVIRONMENT == "production")
+        is_production = settings.ENVIRONMENT == "production"
+        samesite = "none" if is_production else "lax"
+        response.delete_cookie(key=ACCESS_TOKEN_COOKIE, path="/", httponly=True, samesite=samesite, secure=is_production)
+        response.delete_cookie(key=REFRESH_TOKEN_COOKIE, path="/", httponly=True, samesite=samesite, secure=is_production)
         
         return {"status": "success", "message": "Session cookies cleared"}
     except Exception as e:

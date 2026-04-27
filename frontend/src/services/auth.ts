@@ -68,6 +68,7 @@ export async function clearBackendSession(): Promise<void> {
   try {
     const response = await fetch(`${API_BASE_URL}/api/auth/session`, {
       method: 'DELETE',
+      credentials: 'include',
     });
 
     if (!response.ok) {
