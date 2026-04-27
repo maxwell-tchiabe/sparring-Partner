@@ -15,6 +15,8 @@ type AuthContextType = {
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  updatePassword: (password: string) => Promise<void>;
   loading: boolean;
   isAuthenticated: boolean;
 };
@@ -87,12 +89,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       setUserRole(extractUserRole(session));
 
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'PASSWORD_RECOVERY') {
         if (session) {
           await syncSessionWithBackend(
             session.access_token,
             session.refresh_token || ''
           ).catch(console.error);
+        }
+        
+        if (event === 'PASSWORD_RECOVERY') {
+          router.push('/reset-password');
         }
       } else if (event === 'SIGNED_OUT') {
         await clearBackendSession().catch(console.error);
@@ -131,6 +137,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
   };
 
+  const resetPassword = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) throw error;
+  };
+
+  const updatePassword = async (password: string) => {
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) throw error;
+  };
+
   const value = {
     user,
     session,
@@ -139,6 +157,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp,
     signOut,
     signInWithGoogle,
+    resetPassword,
+    updatePassword,
     loading,
     isAuthenticated: !!session?.access_token,
   };

@@ -28,7 +28,8 @@ export function AuthForm() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp, signInWithGoogle } = useAuth();
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const { signIn, signUp, signInWithGoogle, resetPassword } = useAuth();
   const router = useRouter();
 
   const { showNotification } = useNotification();
@@ -68,6 +69,29 @@ export function AuthForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (isForgotPassword) {
+      if (!formData.email) {
+        setErrors({ email: 'Email is required' });
+        return;
+      }
+      setLoading(true);
+      try {
+        await resetPassword(formData.email);
+        showNotification(
+          'success',
+          'Password reset link sent! Please check your email.'
+        );
+        setIsForgotPassword(false);
+      } catch (err) {
+        setErrors({
+          form: err instanceof Error ? err.message : 'Failed to send reset link',
+        });
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     if (!validateForm()) return;
 
     setLoading(true);
@@ -102,7 +126,7 @@ export function AuthForm() {
 
         <div className="relative z-10">
           <h2 className="text-3xl font-black text-center text-white mb-8 tracking-tight">
-            {isLogin ? 'Sign In' : 'Create Account'}
+            {isForgotPassword ? 'Reset Access' : isLogin ? 'Sign In' : 'Create Account'}
           </h2>
 
           {errors.form && (
@@ -142,51 +166,57 @@ export function AuthForm() {
               )}
             </div>
 
-            <div className="space-y-2">
-              <div className="flex justify-between items-center px-1">
-                <label htmlFor="password" className="block text-xs font-black uppercase tracking-widest text-slate-500">
-                  Password
-                </label>
-                {isLogin && (
-                  <button type="button" className="text-[10px] uppercase tracking-widest font-black text-cyan-500/70 hover:text-cyan-400 transition-colors">
-                    Forgot?
+            {!isForgotPassword && (
+              <div className="space-y-2">
+                <div className="flex justify-between items-center px-1">
+                  <label htmlFor="password" className="block text-xs font-black uppercase tracking-widest text-slate-500">
+                    Password
+                  </label>
+                  {isLogin && (
+                    <button 
+                      type="button" 
+                      onClick={() => setIsForgotPassword(true)}
+                      className="text-[10px] uppercase tracking-widest font-black text-cyan-500/70 hover:text-cyan-400 transition-colors"
+                    >
+                      Forgot?
+                    </button>
+                  )}
+                </div>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within:text-cyan-400 transition-colors">
+                    <Lock className="h-4 w-4" />
+                  </div>
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete={isLogin ? 'current-password' : 'new-password'}
+                    required
+                    className={`block w-full pl-11 pr-12 py-3.5 bg-white/[0.03] border ${
+                      errors.password ? 'border-rose-500/50' : 'border-white/10 group-hover:border-white/20'
+                    } rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500/50 transition-all sm:text-sm`}
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={handleChange}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-slate-300 transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
+                </div>
+                {errors.password && (
+                  <p className="mt-1.5 text-[11px] font-medium text-rose-400 ml-1">{errors.password}</p>
+                )}
+                {!isLogin && !errors.password && (
+                  <p className="mt-2 text-[10px] text-slate-500 leading-relaxed italic ml-1">
+                    Combine 8+ characters, uppercase & numbers.
+                  </p>
                 )}
               </div>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within:text-cyan-400 transition-colors">
-                  <Lock className="h-4 w-4" />
-                </div>
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete={isLogin ? 'current-password' : 'new-password'}
-                  required
-                  className={`block w-full pl-11 pr-12 py-3.5 bg-white/[0.03] border ${
-                    errors.password ? 'border-rose-500/50' : 'border-white/10 group-hover:border-white/20'
-                  } rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500/50 transition-all sm:text-sm`}
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={handleChange}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-slate-300 transition-colors"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-              {errors.password && (
-                <p className="mt-1.5 text-[11px] font-medium text-rose-400 ml-1">{errors.password}</p>
-              )}
-              {!isLogin && !errors.password && (
-                <p className="mt-2 text-[10px] text-slate-500 leading-relaxed italic ml-1">
-                  Combine 8+ characters, uppercase & numbers.
-                </p>
-              )}
-            </div>
+            )}
 
             <button
               type="submit"
@@ -204,7 +234,7 @@ export function AuthForm() {
                   </>
                 ) : (
                   <>
-                    {isLogin ? 'Enter System' : 'Initialize Account'}
+                    {isForgotPassword ? 'Send Recovery Link' : isLogin ? 'Enter System' : 'Initialize Account'}
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
@@ -212,43 +242,51 @@ export function AuthForm() {
             </button>
           </form>
 
-          <div className="mt-8">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/5" />
+          {!isForgotPassword && (
+            <div className="mt-8">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-white/5" />
+                </div>
+                <div className="relative flex justify-center text-[10px] font-black uppercase tracking-[0.3em]">
+                  <span className="px-4 bg-[#0A0A0F] text-slate-500">Secure Link</span>
+                </div>
               </div>
-              <div className="relative flex justify-center text-[10px] font-black uppercase tracking-[0.3em]">
-                <span className="px-4 bg-[#0A0A0F] text-slate-500">Secure Link</span>
+
+              <div className="mt-6">
+                <button
+                  onClick={signInWithGoogle}
+                  className="w-full flex items-center justify-center px-4 py-3 border border-white/10 rounded-xl text-[11px] font-black uppercase tracking-widest text-slate-300 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20 hover:text-white transition-all active:scale-[0.98] cursor-pointer"
+                >
+                  <GoogleLogo className="w-4 h-4 mr-3" />
+                  Auth with Google
+                </button>
               </div>
             </div>
+          )}
 
-            <div className="mt-6">
-              <button
-                onClick={signInWithGoogle}
-                className="w-full flex items-center justify-center px-4 py-3 border border-white/10 rounded-xl text-[11px] font-black uppercase tracking-widest text-slate-300 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20 hover:text-white transition-all active:scale-[0.98] cursor-pointer"
-              >
-                <GoogleLogo className="w-4 h-4 mr-3" />
-                Auth with Google
-              </button>
-            </div>
-          </div>
-
-          <div className="mt-8 text-center">
+          <div className="mt-8 text-center flex flex-col gap-3">
             <button
-              type="button"
-              onClick={() => {
-                setIsLogin(!isLogin);
-                setErrors({});
-              }}
-              className="text-xs font-bold text-slate-500 hover:text-cyan-400 transition-colors group cursor-pointer"
-            >
-              {isLogin ? (
-                <>New here? <span className="text-cyan-500 group-hover:underline underline-offset-4 decoration-2 decoration-cyan-500/30">Create an identity</span></>
-              ) : (
-                <>Existing member? <span className="text-cyan-500 group-hover:underline underline-offset-4 decoration-2 decoration-cyan-500/30">Access system</span></>
-              )}
-            </button>
-          </div>
+               type="button"
+               onClick={() => {
+                 if (isForgotPassword) {
+                   setIsForgotPassword(false);
+                 } else {
+                   setIsLogin(!isLogin);
+                 }
+                 setErrors({});
+               }}
+               className="text-xs font-bold text-slate-500 hover:text-cyan-400 transition-colors group cursor-pointer"
+             >
+               {isForgotPassword ? (
+                 <>Back to <span className="text-cyan-500 group-hover:underline underline-offset-4 decoration-2 decoration-cyan-500/30">Sign In</span></>
+               ) : isLogin ? (
+                 <>New here? <span className="text-cyan-500 group-hover:underline underline-offset-4 decoration-2 decoration-cyan-500/30">Create an identity</span></>
+               ) : (
+                 <>Existing member? <span className="text-cyan-500 group-hover:underline underline-offset-4 decoration-2 decoration-cyan-500/30">Access system</span></>
+               )}
+             </button>
+           </div>
         </div>
       </div>
     </div>

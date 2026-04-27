@@ -68,7 +68,7 @@ export function Header() {
               Voice Assistant
             </button>
           </nav>
-          
+
           <div className="hidden md:flex items-center space-x-4">
             {user ? (
               <button
@@ -109,10 +109,9 @@ export function Header() {
       </div>
 
       {/* Mobile Navigation */}
-      <div 
-        className={`md:hidden transition-all duration-300 ease-in-out ${
-          mobileMenuOpen ? 'max-h-[calc(100dvh-5rem)] overflow-y-auto border-b border-white/10 opacity-100' : 'max-h-0 overflow-hidden opacity-0'
-        } bg-[#0A0A0F]/95 backdrop-blur-3xl`}
+      <div
+        className={`md:hidden transition-all duration-300 ease-in-out ${mobileMenuOpen ? 'max-h-[calc(100dvh-5rem)] overflow-y-auto border-b border-white/10 opacity-100' : 'max-h-0 overflow-hidden opacity-0'
+          } bg-[#0A0A0F]/95 backdrop-blur-3xl`}
       >
         <div className="px-4 pt-2 pb-6 space-y-1">
           <button
