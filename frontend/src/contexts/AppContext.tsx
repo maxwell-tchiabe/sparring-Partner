@@ -36,7 +36,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const { user: authUser, loading: authLoading } = useAuth();
+  const { user: authUser, loading: authLoading, isAuthenticated } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -55,10 +55,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [authUser]);
 
-  // Load chat history from API when auth is ready
+  // Load chat history from API when auth session is fully ready
   useEffect(() => {
     const loadChatHistory = async () => {
-      if (authLoading || !authUser) return;
+      // Wait until auth is done loading AND we have a confirmed session token
+      if (authLoading || !isAuthenticated) return;
 
       try {
         const sessions = await getChatSessions();
@@ -77,7 +78,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
 
     loadChatHistory();
-  }, [authLoading, authUser]);
+  }, [authLoading, isAuthenticated]);
 
 
   const fetchMessages = async (sid: string) => {

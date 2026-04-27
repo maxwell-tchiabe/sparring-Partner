@@ -2,7 +2,7 @@
 # Stage 1 — builder
 # Install system build tools + resolve all Python dependencies
 # ============================================================
-FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS builder
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS builder
 
 WORKDIR /app
 
@@ -28,7 +28,7 @@ RUN uv pip install -e .
 # Stage 2 — runtime
 # Minimal image: no compilers, no build tools, no uv cache
 # ============================================================
-FROM python:3.13-slim-bookworm AS runtime
+FROM python:3.12-slim-bookworm AS runtime
 
 WORKDIR /app
 

@@ -227,6 +227,7 @@ async def chat_handler(
         
         # Initialize variables for content and buffers
         content = ""
+        llm_content = ""
         audio_buffer = None
         image_bytes = None
 
@@ -234,17 +235,23 @@ async def chat_handler(
         if audio:
             audio_data = await audio.read()
             content = await speech_to_text.transcribe(audio_data)
+            llm_content = content
             audio_buffer = audio_data
         elif image:
             image_bytes = await image.read()
-            content = await image_to_text.analyze_image(
+            analyzer_prompt = f"User message: {message}\nPlease describe what you see in this image in the context of the user message." if message else "Please describe what you see in this image in the context of our conversation."
+            image_analysis = await image_to_text.analyze_image(
                 image_bytes,
-                "Please describe what you see in this image in the context of our conversation."
+                analyzer_prompt
             )
+            content = message if message else "Sent an image"
+            llm_content = f"User sent an image. Image description: {image_analysis}\n\nUser message: {message}" if message else f"User sent an image. Image description: {image_analysis}"
         elif message:
             content = message
+            llm_content = message
         else:
-            raise HTTPException(status_code=400, detail="No valid input provided")        # Create and store user message
+            raise HTTPException(status_code=400, detail="No valid input provided")
+            
         # Create and store user message
         msg_type = "conversation"
         if image:
@@ -270,7 +277,7 @@ async def chat_handler(
         ) as short_term_memory:
             graph = graph_builder.compile(checkpointer=short_term_memory)
             await graph.ainvoke(
-                {"messages": [HumanMessage(content=content)]},
+                {"messages": [HumanMessage(content=llm_content)]},
                 {"configurable": {"thread_id": session_id}},
             )
 

@@ -16,6 +16,7 @@ type AuthContextType = {
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   loading: boolean;
+  isAuthenticated: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -139,6 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signOut,
     signInWithGoogle,
     loading,
+    isAuthenticated: !!session?.access_token,
   };
 
   return (
