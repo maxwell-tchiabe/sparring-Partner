@@ -26,8 +26,11 @@ async def set_session(response: Response, request_data: SessionRequest):
             "secure": is_production,
             "samesite": "none" if is_production else "lax",
             "path": "/",
-            "max_age": 604800
+            "max_age": 604800,
         }
+        
+        if settings.COOKIE_DOMAIN:
+            cookie_params["domain"] = settings.COOKIE_DOMAIN
 
         # Set the Access Token cookie
         response.set_cookie(
@@ -73,8 +76,17 @@ async def clear_session(response: Response):
     try:
         is_production = settings.ENVIRONMENT == "production"
         samesite = "none" if is_production else "lax"
-        response.delete_cookie(key=ACCESS_TOKEN_COOKIE, path="/", httponly=True, samesite=samesite, secure=is_production)
-        response.delete_cookie(key=REFRESH_TOKEN_COOKIE, path="/", httponly=True, samesite=samesite, secure=is_production)
+        cookie_params = {
+            "path": "/",
+            "httponly": True,
+            "samesite": samesite,
+            "secure": is_production
+        }
+        if settings.COOKIE_DOMAIN:
+            cookie_params["domain"] = settings.COOKIE_DOMAIN
+
+        response.delete_cookie(key=ACCESS_TOKEN_COOKIE, **cookie_params)
+        response.delete_cookie(key=REFRESH_TOKEN_COOKIE, **cookie_params)
         
         return {"status": "success", "message": "Session cookies cleared"}
     except Exception as e:
