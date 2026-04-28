@@ -33,7 +33,7 @@ export default function RootLayout({
         <AuthProvider>
           <NotificationProvider>
             <AppProvider>
-              <div className="flex h-screen overflow-hidden">
+              <div className="flex h-[100dvh] overflow-hidden">
                 <Navigation />
                 <main className="flex-1 overflow-auto">{children}</main>
               </div>

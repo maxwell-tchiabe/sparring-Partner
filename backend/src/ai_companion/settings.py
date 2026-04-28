@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     SUPABASE_URL: str
     SUPABASE_KEY: str
     ENVIRONMENT: str = "development"
+    COOKIE_DOMAIN: str | None = None
     GROQ_API_KEY: str
     ELEVENLABS_API_KEY: str
     ELEVENLABS_VOICE_ID: str

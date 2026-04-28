@@ -11,7 +11,16 @@ export function proxy(request: NextRequest) {
   );
 
   // Check if the auth cookie exists (set by backend after syncSessionWithBackend)
-  const token = request.cookies.get('sb-access-token')?.value;
+  const tokenEntry = request.cookies.get('sb-access-token');
+  const token = tokenEntry?.value;
+
+  if (process.env.NODE_ENV === 'production') {
+    console.log(`[Middleware] Path: ${pathname}, Token present: ${!!token}`);
+    if (!token) {
+        const allCookies = request.cookies.getAll().map(c => c.name);
+        console.log(`[Middleware] Visible cookies: ${allCookies.join(', ')}`);
+    }
+  }
 
   // If user is NOT authenticated and trying to access a protected route → redirect to login
   if (!token && !isPublicPath) {

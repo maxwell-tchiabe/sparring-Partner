@@ -49,7 +49,7 @@ export function Navigation() {
   }, []);
 
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
       if (
         profileMenuRef.current &&
         !profileMenuRef.current.contains(event.target as Node)
@@ -58,8 +58,10 @@ export function Navigation() {
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
     };
   }, [profileMenuRef]);
 
@@ -117,7 +119,7 @@ export function Navigation() {
       {/* Navigation sidebar */}
       <nav
         className={cn(
-          'fixed md:relative flex flex-col h-screen bg-[#0A0A0F] border-r border-white/5 text-white w-64 z-40 transition-transform duration-300 ease-in-out',
+          'fixed md:relative flex flex-col h-[100dvh] bg-[#0A0A0F] border-r border-white/5 text-white w-64 z-40 transition-transform duration-300 ease-in-out',
           isMobile && !isOpen ? '-translate-x-full' : 'translate-x-0',
           isMobile && 'shadow-2xl'
         )}
@@ -198,7 +200,7 @@ export function Navigation() {
         </div>
 
         {/* User Profile Section */}
-        <div ref={profileMenuRef} className="relative p-3 border-t border-white/5">
+        <div ref={profileMenuRef} className="relative p-3 pb-8 md:pb-3 border-t border-white/5">
           {isProfileMenuOpen && (
             <div className="absolute bottom-full mb-2 left-3 right-3 bg-[#0F111A] border border-white/10 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl">
               <ul className="text-sm text-slate-300 p-1">
