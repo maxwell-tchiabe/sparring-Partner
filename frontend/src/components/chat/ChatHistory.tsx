@@ -100,14 +100,14 @@ export const ChatHistory = ({ onChatSelect }: { onChatSelect?: () => void }) => 
 
   if (!chatHistory?.length) {
     return (
-      <div className="h-[calc(100vh-280px)] flex items-center justify-center">
+      <div className="flex-1 h-full flex items-center justify-center">
         <p className="text-xs text-slate-600 text-center px-4">No sessions yet.<br/>Start a new chat above.</p>
       </div>
     );
   }
 
   return (
-    <div className="h-[calc(100vh-280px)] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent py-2">
+    <div className="flex-1 h-full overflow-y-auto scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent py-2">
       <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 px-3 mb-2">
         Recent Sessions
       </p>
