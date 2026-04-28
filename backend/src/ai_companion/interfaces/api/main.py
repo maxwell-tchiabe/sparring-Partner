@@ -78,6 +78,14 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 content={"detail": str(e)}
             )
 
+# Startup event to verify configuration
+@app.on_event("startup")
+async def startup_event():
+    print(f"=== API STARTUP DEBUG ===")
+    print(f"ENVIRONMENT: {os.getenv('ENVIRONMENT', 'NOT SET')}")
+    print(f"COOKIE_DOMAIN: {os.getenv('COOKIE_DOMAIN', 'NOT SET')}")
+    print(f"=========================")
+
 app.add_middleware(AuthMiddleware)
 
 app.add_middleware(
