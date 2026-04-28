@@ -21,10 +21,17 @@ async def set_session(response: Response, request_data: SessionRequest):
     try:
         is_production = settings.ENVIRONMENT == "production"
         
+        # Safari Compatibility: Use 'lax' for subdomains. 
+        # 'none' requires Secure=True and is often blocked by Safari ITP even on subdomains.
+        # Since we use COOKIE_DOMAIN (subdomains), 'lax' is perfect.
+        samesite = "lax"
+        if is_production and not settings.COOKIE_DOMAIN:
+            samesite = "none"
+            
         cookie_params = {
             "httponly": True,
             "secure": is_production,
-            "samesite": "none" if is_production else "lax",
+            "samesite": samesite,
             "path": "/",
             "max_age": 604800,
         }
@@ -75,7 +82,11 @@ async def clear_session(response: Response):
     """
     try:
         is_production = settings.ENVIRONMENT == "production"
-        samesite = "none" if is_production else "lax"
+        
+        samesite = "lax"
+        if is_production and not settings.COOKIE_DOMAIN:
+            samesite = "none"
+
         cookie_params = {
             "path": "/",
             "httponly": True,
