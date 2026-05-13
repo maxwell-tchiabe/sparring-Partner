@@ -55,6 +55,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT }}
           source: "backend/docker-compose.staging.yml"
           target: "/opt/sparring-partner/"
           strip_components: 1
@@ -65,6 +66,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT}}
           script: |
             mkdir -p /opt/sparring-partner/short_term_memory
             cd /opt/sparring-partner/
