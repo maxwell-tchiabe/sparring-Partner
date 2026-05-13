@@ -16,48 +16,12 @@ from ai_companion.graph import graph_builder
 from ai_companion.modules.image import ImageToText
 from ai_companion.modules.speech import SpeechToText, TextToSpeech
 from ai_companion.settings import settings
-#from ai_companion.database.mongodb import db
 from ai_companion.database.supabase import db
 from ai_companion.models.message import Message, MessageContent
 from ai_companion.models.chat_session import ChatSession
 from ai_companion.modules.dashboard.service import DashboardService
 
-from slowapi import Limiter
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
-from slowapi.middleware import SlowAPIMiddleware
-
 logger = logging.getLogger(__name__)
-
-# Initialize rate limiter
-limiter = Limiter(key_func=get_remote_address)
-
-# Apply to router (FastAPI v0.95+)
-def include_limiter(app):
-    app.state.limiter = limiter
-    app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
-    app.add_middleware(SlowAPIMiddleware)
-
-# Rate limit error handler
-async def rate_limit_handler(request: Request, exc: RateLimitExceeded) -> Response:
-    retry_after_seconds = exc.limit.limit.GRANULARITY.seconds
-    
-    response = JSONResponse(
-        status_code=429,
-        content={"error": "rate limit exceeded. please try again later.",
-                 "retry_after": retry_after_seconds
-        },
-        headers={"Retry-After": str(retry_after_seconds)}
-    )
-    
-    response = request.app.state.limiter._inject_headers(
-        response, request.state.view_rate_limit
-    )
-    return response
-
-# Shared limit for all message-sending endpoints
-message_send_limit = limiter.shared_limit("50/hour", scope="send_messages")
-
 
 # Custom key function (e.g., using JWT)
 def get_user_identifier(request: Request):
@@ -172,7 +136,6 @@ async def update_chat_session(
     description="Deletes a chat session and all its associated messages",
     response_description="Success message",
     tags=["Chat Sessions"])
-@limiter.limit("1/minute", key_func=get_user_identifier)
 async def delete_chat_session(
     request: Request,
     session_id: str = Path(..., description="The ID of the chat session to delete")
@@ -203,7 +166,6 @@ async def delete_chat_session(
     Only one of message, audio, or image should be provided at a time.""",
     response_description="The assistant's response with corresponding content type",
     tags=["Chat"])
-@message_send_limit
 async def chat_handler(
     request: Request,
     background_tasks: BackgroundTasks,
