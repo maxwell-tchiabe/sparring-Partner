@@ -14,6 +14,9 @@ services:
       - "--certificatesresolvers.myresolver.acme.dnschallenge.provider=cloudflare"
       - "--certificatesresolvers.myresolver.acme.email=${ACME_EMAIL}"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      # Trust Cloudflare IPs so real client IP is used for rate limiting
+      - "--entrypoints.websecure.forwardedHeaders.trustedIPs=173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22"
+      - "--entrypoints.web.forwardedHeaders.trustedIPs=173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22"
     environment:
       - CF_DNS_API_TOKEN=${CF_DNS_API_TOKEN}
     ports:
@@ -50,6 +53,7 @@ services:
       - "traefik.http.routers.api-chat.tls.certresolver=myresolver"
       - "traefik.http.routers.api-chat.middlewares=chat-ratelimit"
       - "traefik.http.routers.api-chat.priority=100"
+      - "traefik.http.routers.api-chat.service=api"  # REQUIRED: point to the api backend service
 
       # Chat Specific Rate Limit: 10 requests per minute, burst of 5
       - "traefik.http.middlewares.chat-ratelimit.ratelimit.average=2"
