@@ -41,7 +41,7 @@ services:
 
       # CORS Middleware
       - "traefik.http.middlewares.api-cors.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,POST,DELETE,PATCH"
-      - "traefik.http.middlewares.api-cors.headers.accesscontrolallowheaders=*"
+      - "traefik.http.middlewares.api-cors.headers.accesscontrolallowheaders=Content-Type,Authorization,Accept,Origin,X-Requested-With"
       - "traefik.http.middlewares.api-cors.headers.accesscontrolalloworiginlist=https://evochat.maxwelltbtech.com,https://sparring-partner-frontend.vercel.app,http://localhost:3000"
       - "traefik.http.middlewares.api-cors.headers.accesscontrolallowcredentials=true"
 
