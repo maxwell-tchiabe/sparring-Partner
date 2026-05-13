@@ -38,7 +38,8 @@ class AuthMiddleware(BaseHTTPMiddleware):
             "/static", 
             "/favicon.ico",
             "/api/auth/session",
-            "/api/auth/me"
+            "/api/auth/me",
+            "/api/debug/ip"
         )
         if any(request.url.path.startswith(p) for p in public_prefixes):
             return await call_next(request)
