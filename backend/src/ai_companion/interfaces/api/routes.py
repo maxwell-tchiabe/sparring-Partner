@@ -366,9 +366,6 @@ async def debug_ip(request: Request):
 
     If client.host is a Cloudflare IP range, trustedIPs is NOT working.
     """
-    if settings.ENVIRONMENT == "production":
-        raise HTTPException(status_code=404, detail="Not found")
-
     return {
         # The IP Traefik resolved — this is what rate limiting uses
         "traefik_resolved_ip": request.client.host if request.client else "unknown",
@@ -400,4 +397,4 @@ def _is_cloudflare_ip(ip: str) -> bool:
         addr = ipaddress.ip_address(ip)
         return any(addr in ipaddress.ip_network(r) for r in cf_ranges)
     except ValueError:
-        return False
+        return False
