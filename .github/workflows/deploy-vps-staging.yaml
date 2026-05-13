@@ -49,14 +49,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Copy docker-compose via scp
+      - name: Copy deployment files via scp
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_SSH_PORT }}
-          source: "backend/docker-compose.staging.yml"
+          source: "backend/docker-compose.staging.yml,backend/docker-compose.monitoring.yml,backend/monitoring"
           target: "/opt/sparring-partner/"
           strip_components: 1
 
@@ -76,6 +76,11 @@ jobs:
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
             export IMAGE_TAG=${{ github.sha }}
+            
+            docker network create monitoring || true
+            docker compose -f docker-compose.monitoring.yml pull
+            docker compose -f docker-compose.monitoring.yml up -d
+            
             docker compose pull
             docker compose up -d
             

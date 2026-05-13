@@ -27,6 +27,10 @@ dependencies = [
     "loguru>=0.7.3",
     "langchain-tavily>=0.2.0",
     "slowapi>=0.1.9",
+    "prometheus-fastapi-instrumentator>=6.1.0",
+    "opentelemetry-sdk>=1.24.0",
+    "opentelemetry-instrumentation-fastapi>=0.45b0",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.24.0",
 ]
 
 [dependency-groups]

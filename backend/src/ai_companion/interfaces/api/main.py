@@ -13,6 +13,14 @@ import fastapi
 import numpy as np
 import os
 
+from prometheus_fastapi_instrumentator import Instrumentator
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.trace.sampling import TraceIdRatioBased
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+
 app = FastAPI(
     title="AI Companion API",
     description="API for AI Companion application",
@@ -20,6 +28,17 @@ app = FastAPI(
     openapi_url="/openapi.json",
     docs_url="/docs"
 )
+
+# --- OpenTelemetry traces ---
+# 10% sampling rate
+sampler = TraceIdRatioBased(0.1)
+provider = TracerProvider(sampler=sampler)
+provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter(endpoint="http://tempo:4317", insecure=True)))
+trace.set_tracer_provider(provider)
+FastAPIInstrumentor.instrument_app(app)
+
+# --- Prometheus metrics ---
+Instrumentator().instrument(app).expose(app, endpoint="/metrics", include_in_schema=False)
 security = HTTPBearer()
 
 
@@ -37,7 +56,8 @@ class AuthMiddleware(BaseHTTPMiddleware):
             "/static", 
             "/favicon.ico",
             "/api/auth/session",
-            "/api/auth/me"
+            "/api/auth/me",
+            "/metrics"
         )
         if any(request.url.path.startswith(p) for p in public_prefixes):
             return await call_next(request)
