@@ -37,24 +37,30 @@ services:
       - "traefik.http.routers.api.rule=Host(`${DOMAIN_NAME}`)"
       - "traefik.http.routers.api.entrypoints=websecure"
       - "traefik.http.routers.api.tls.certresolver=myresolver"
-      - "traefik.http.routers.api.middlewares=api-ratelimit"
+      - "traefik.http.routers.api.middlewares=api-cors,api-ratelimit"
+
+      # CORS Middleware
+      - "traefik.http.middlewares.api-cors.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,POST,DELETE,PATCH"
+      - "traefik.http.middlewares.api-cors.headers.accesscontrolallowheaders=*"
+      - "traefik.http.middlewares.api-cors.headers.accesscontrolalloworiginlist=https://evochat.maxwelltbtech.com,https://sparring-partner-frontend.vercel.app,http://localhost:3000"
+      - "traefik.http.middlewares.api-cors.headers.accesscontrolallowcredentials=true"
 
       # General API Rate Limit: 100 requests per minute, burst of 50
-      - "traefik.http.middlewares.api-ratelimit.ratelimit.average=5"
+      - "traefik.http.middlewares.api-ratelimit.ratelimit.average=100"
       - "traefik.http.middlewares.api-ratelimit.ratelimit.period=1m"
-      - "traefik.http.middlewares.api-ratelimit.ratelimit.burst=5"
+      - "traefik.http.middlewares.api-ratelimit.ratelimit.burst=50"
 
       # Chat Specific Router (protect resource)
       - "traefik.http.routers.api-chat.rule=Host(`${DOMAIN_NAME}`) && Path(`/api/chat`)"
       - "traefik.http.routers.api-chat.entrypoints=websecure"
       - "traefik.http.routers.api-chat.tls.certresolver=myresolver"
-      - "traefik.http.routers.api-chat.middlewares=chat-ratelimit"
+      - "traefik.http.routers.api-chat.middlewares=api-cors,chat-ratelimit"
       - "traefik.http.routers.api-chat.priority=100"
       - "traefik.http.routers.api-chat.service=api" # REQUIRED: point to the api backend service
 
       # Chat Specific Rate Limit: 10 requests per minute, burst of 5
-      - "traefik.http.middlewares.chat-ratelimit.ratelimit.average=1"
+      - "traefik.http.middlewares.chat-ratelimit.ratelimit.average=10"
       - "traefik.http.middlewares.chat-ratelimit.ratelimit.period=1h"
-      - "traefik.http.middlewares.chat-ratelimit.ratelimit.burst=2"
+      - "traefik.http.middlewares.chat-ratelimit.ratelimit.burst=5"
 
       - "traefik.http.services.api.loadbalancer.server.port=8080"

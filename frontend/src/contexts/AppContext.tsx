@@ -162,13 +162,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setIsLoading(false);
         })
         .catch((error) => {
-          showNotification('error', 'Failed to send message.');
-          if (
-            error.message &&
-            error.message.toLowerCase().includes('too many requests')
-          ) {
+          const isRateLimit = error.message && error.message.toLowerCase().includes('too many requests');
+          
+          if (isRateLimit) {
+            showNotification('warning', 'You are sending messages too fast! Please wait a moment.');
             setShowUpgrade(true);
+          } else {
+            showNotification('error', 'Failed to send message.');
           }
+          
           setIsLoading(false);
         });
     }

@@ -3,7 +3,6 @@ from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer
 from ai_companion.interfaces.api.routes import chat_router
 from ai_companion.interfaces.api.dashboard import dashboard_router
-from fastapi.middleware.cors import CORSMiddleware
 from ai_companion.core.auth import verify_token
 from ai_companion.interfaces.api.auth import auth_router
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -87,14 +86,6 @@ async def startup_event():
     print(f"=========================")
 
 app.add_middleware(AuthMiddleware)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://evochat.maxwelltbtech.com","https://sparring-partner-frontend.vercel.app"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 app.include_router(chat_router)
 app.include_router(dashboard_router)
