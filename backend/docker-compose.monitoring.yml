@@ -1,7 +1,19 @@
 services:
+  prometheus-init:
+    image: busybox:latest
+    user: "0:0"
+    command: sh -c "chown -R 65534:65534 /prometheus"
+    volumes:
+      - prometheus_data:/prometheus
+    networks:
+      - monitoring
+
   prometheus:
     image: prom/prometheus:v2.50.1
     container_name: prometheus
+    depends_on:
+      prometheus-init:
+        condition: service_completed_successfully
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - ./monitoring/prometheus/alerts.yml:/etc/prometheus/alerts.yml
@@ -37,9 +49,21 @@ services:
     networks:
       - monitoring
 
+  loki-init:
+    image: busybox:latest
+    user: "0:0"
+    command: sh -c "chown -R 10001:10001 /tmp/loki"
+    volumes:
+      - loki_data:/tmp/loki
+    networks:
+      - monitoring
+
   loki:
     image: grafana/loki:2.9.4
     container_name: loki
+    depends_on:
+      loki-init:
+        condition: service_completed_successfully
     command: -config.file=/etc/loki/local-config.yaml
     volumes:
       - ./monitoring/loki/loki-config.yml:/etc/loki/local-config.yaml
@@ -60,9 +84,21 @@ services:
     networks:
       - monitoring
 
+  tempo-init:
+    image: busybox:latest
+    user: "0:0"
+    command: sh -c "chown -R 10001:10001 /tmp/tempo"
+    volumes:
+      - tempo_data:/tmp/tempo
+    networks:
+      - monitoring
+
   tempo:
     image: grafana/tempo:2.3.1
     container_name: tempo
+    depends_on:
+      tempo-init:
+        condition: service_completed_successfully
     command: [ "-config.file=/etc/tempo.yaml" ]
     volumes:
       - ./monitoring/tempo/tempo.yml:/etc/tempo.yaml
@@ -71,9 +107,21 @@ services:
     networks:
       - monitoring
 
+  alertmanager-init:
+    image: busybox:latest
+    user: "0:0"
+    command: sh -c "chown -R 65534:65534 /alertmanager"
+    volumes:
+      - alertmanager_data:/alertmanager
+    networks:
+      - monitoring
+
   alertmanager:
     image: prom/alertmanager:v0.27.0
     container_name: alertmanager
+    depends_on:
+      alertmanager-init:
+        condition: service_completed_successfully
     env_file:
       - .env
     environment:
