@@ -5,12 +5,7 @@ server:
   grpc_listen_port: 9096
 
 common:
-  instance_addr: 127.0.0.1
   path_prefix: /tmp/loki
-  storage:
-    filesystem:
-      chunks_directory: /tmp/loki/chunks
-      rules_directory: /tmp/loki/rules
   replication_factor: 1
   ring:
     kvstore:
@@ -18,20 +13,25 @@ common:
 
 schema_config:
   configs:
-    - from: 2020-10-24
-      store: boltdb-shipper
+    - from: "2020-10-24"
+      store: tsdb
       object_store: filesystem
-      schema: v11
+      schema: v13
       index:
         prefix: index_
         period: 24h
 
-ruler:
-  alertmanager_url: http://alertmanager:9093
+storage_config:
+  tsdb_shipper:
+    active_index_directory: /tmp/loki/tsdb-index
+    cache_location: /tmp/loki/tsdb-cache
+    cache_ttl: 24h
+  filesystem:
+    directory: /tmp/loki/chunks
 
 compactor:
-  working_directory: /tmp/loki/boltdb-shipper-compactor
+  working_directory: /tmp/loki/compactor
   shared_store: filesystem
 
 limits_config:
-  retention_period: 168h # 7 days
+  retention_period: 168h
