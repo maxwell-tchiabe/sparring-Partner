@@ -83,7 +83,10 @@
       "bars": true,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "${DS_LOKI}",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -124,7 +127,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(count_over_time({job=\"$app\"} |= \"$search\" [$__interval]))",
+          "expr": "sum(count_over_time({compose_service=\"$app\"} |= \"$search\" [$__interval]))",
           "legendFormat": "",
           "refId": "A"
         }
@@ -173,7 +176,10 @@
       }
     },
     {
-      "datasource": "${DS_LOKI}",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -196,7 +202,7 @@
       },
       "targets": [
         {
-          "expr": "{job=\"$app\"} |= \"$search\" | logfmt",
+          "expr": "{compose_service=\"$app\"} |= \"$search\" | logfmt",
           "hide": false,
           "legendFormat": "",
           "refId": "A"
@@ -218,15 +224,21 @@
       {
         "allValue": null,
         "current": {},
-        "datasource": "${DS_LOKI}",
-        "definition": "label_values(job)",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "definition": "label_values(compose_service)",
         "hide": 0,
         "includeAll": false,
         "label": "App",
         "multi": false,
         "name": "app",
         "options": [],
-        "query": "label_values(job)",
+        "query": {
+          "refId": "LokiVariableQueryEditor-VariableQuery",
+          "expr": "label_values(compose_service)"
+        },
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
