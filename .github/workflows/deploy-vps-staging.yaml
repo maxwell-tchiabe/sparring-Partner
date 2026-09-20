@@ -12,8 +12,56 @@ env:
   IMAGE_NAME: ghcr.io/maxwell-tchiabe/sparring-partner-api
 
 jobs:
+  quality-checks:
+    name: Run lint and type checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: latest
+
+      - name: Run Ruff
+        working-directory: backend
+        run: uvx ruff check src tests
+
+      - name: Run mypy
+        working-directory: backend
+        run: uvx mypy src tests
+
+  security-audit:
+    name: Audit backend dependencies
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: latest
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: uv sync --frozen
+
+      - name: Run dependency audit
+        working-directory: backend
+        run: uvx pip-audit --path .venv
+
   unit-tests:
     name: Run backend unit tests
+    needs: [quality-checks, security-audit]
     runs-on: ubuntu-latest
     env:
       # Unit tests use mocked services but some modules load settings at import time.
@@ -81,7 +129,7 @@ jobs:
 
   deploy:
     name: Deploy to VPS
-    needs: build-and-push
+    needs: trivy-scan
     runs-on: ubuntu-latest
     
     steps:
@@ -119,8 +167,34 @@ jobs:
             docker network create monitoring || true
             docker compose -f docker-compose.monitoring.yml pull
             docker compose -f docker-compose.monitoring.yml up -d
-            
+
             docker compose pull
             docker compose up -d
-            
+
             docker image prune -af
+
+  trivy-scan:
+    name: Scan staging image with Trivy
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Scan image for vulnerabilities
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: CRITICAL,HIGH
