@@ -18,7 +18,7 @@ jobs:
     env:
       # Unit tests use mocked services but some modules load settings at import time.
       SUPABASE_URL: http://localhost:54321
-      SUPABASE_KEY: test-supabase-key
+      SUPABASE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRlc3QifQ.c2lnbmF0dXJl
       GROQ_API_KEY: test-groq-key
       ELEVENLABS_API_KEY: test-elevenlabs-key
       ELEVENLABS_VOICE_ID: test-voice-id
