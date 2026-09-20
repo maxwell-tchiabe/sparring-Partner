@@ -1,24 +1,24 @@
 import os
 import tempfile
-from typing import Optional
+from typing import ClassVar
 
 from groq import Groq
 
 from ai_companion.core.exceptions import SpeechToTextError
-from ai_companion.settings import settings
 from ai_companion.core.helpers import clean_env_var
+from ai_companion.settings import settings
 
 
 class SpeechToText:
     """A class to handle speech-to-text conversion using Groq's Whisper model."""
 
     # Required environment variables
-    REQUIRED_ENV_VARS = ["GROQ_API_KEY"]
+    REQUIRED_ENV_VARS: ClassVar[list[str]] = ["GROQ_API_KEY"]
 
     def __init__(self):
         """Initialize the SpeechToText class and validate environment variables."""
         self._validate_env_vars()
-        self._client: Optional[Groq] = None
+        self._client: Groq | None = None
 
     def _validate_env_vars(self) -> None:
         """Validate that all required environment variables are set."""
@@ -59,7 +59,7 @@ class SpeechToText:
 
             try:
                 # Open the temporary file for the API request
-                with open(temp_file_path, "rb") as audio_file:
+                with open(temp_file_path, "rb") as audio_file:  # noqa: ASYNC230
                     transcription = self.client.audio.transcriptions.create(
                         file=audio_file,
                         model="whisper-large-v3-turbo",
@@ -78,5 +78,5 @@ class SpeechToText:
 
         except Exception as e:
             raise SpeechToTextError(
-                f"Speech-to-text conversion failed: {str(e)}"
+                f"Speech-to-text conversion failed: {e!s}"
             ) from e

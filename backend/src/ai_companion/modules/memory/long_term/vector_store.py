@@ -1,16 +1,15 @@
 import os
-from typing import Optional, List
-from functools import lru_cache
 from dataclasses import dataclass
 from datetime import datetime
+from functools import lru_cache
+from typing import ClassVar
 
 from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, VectorParams, PointStruct
+from qdrant_client.models import Distance, PointStruct, VectorParams
 from sentence_transformers import SentenceTransformer
 
-from ai_companion.settings import settings
 from ai_companion.core.helpers import clean_env_var
-
+from ai_companion.settings import settings
 
 
 @dataclass
@@ -19,14 +18,14 @@ class Memory:
 
     text: str
     metadata: dict
-    score: Optional[float] = None
+    score: float | None = None
 
     @property
-    def id(self) -> Optional[str]:
+    def id(self) -> str | None:
         return self.metadata.get("id")
 
     @property
-    def timestamp(self) -> Optional[datetime]:
+    def timestamp(self) -> datetime | None:
         ts = self.metadata.get("timestamp")
         return datetime.fromisoformat(ts) if ts else None
 
@@ -34,15 +33,15 @@ class Memory:
 class VectorStore:
     """A class to handle vector storage operations using Qdrant."""
 
-    REQUIRED_ENV_VARS = ["QDRANT_URL", "QDRANT_API_KEY"]
+    REQUIRED_ENV_VARS: ClassVar[list[str]] = ["QDRANT_URL", "QDRANT_API_KEY"]
     EMBEDDING_MODEL = "all-MiniLM-L6-v2"
     COLLECTION_NAME = "long_term_memory"
     SIMILARITY_THRESHOLD = 0.9  # Threshold for considering memories as similar
 
-    _instance: Optional["VectorStore"] = None
+    _instance: ClassVar["VectorStore | None"] = None
     _initialized: bool = False
 
-    def __new__(cls) -> "VectorStore":
+    def __new__(cls) -> "VectorStore":  # noqa: PYI034
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
@@ -52,7 +51,12 @@ class VectorStore:
             self._validate_env_vars()
             self.model = SentenceTransformer(self.EMBEDDING_MODEL)
             self.client = QdrantClient(
-                url=clean_env_var(settings.QDRANT_URL), api_key=clean_env_var(settings.QDRANT_API_KEY)
+                url=clean_env_var(settings.QDRANT_URL),
+                api_key=(
+                    clean_env_var(settings.QDRANT_API_KEY)
+                    if settings.QDRANT_API_KEY
+                    else None
+                ),
             )
             self._initialized = True
 
@@ -80,7 +84,7 @@ class VectorStore:
             ),
         )
 
-    def find_similar_memory(self, text: str) -> Optional[Memory]:
+    def find_similar_memory(self, text: str) -> Memory | None:
         """Find if a similar memory already exists.
 
         Args:
@@ -90,7 +94,11 @@ class VectorStore:
             Optional Memory if a similar one is found
         """
         results = self.search_memories(text, k=1)
-        if results and results[0].score >= self.SIMILARITY_THRESHOLD:
+        if (
+            results
+            and results[0].score is not None
+            and results[0].score >= self.SIMILARITY_THRESHOLD
+        ):
             return results[0]
         return None
 
@@ -124,7 +132,7 @@ class VectorStore:
             points=[point],
         )
 
-    def search_memories(self, query: str, k: int = 5) -> List[Memory]:
+    def search_memories(self, query: str, k: int = 5) -> list[Memory]:
         """Search for similar memories in the vector store.
 
         Args:

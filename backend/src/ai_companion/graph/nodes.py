@@ -1,22 +1,22 @@
 import os
 from uuid import uuid4
 
-from langchain_core.messages import HumanMessage, RemoveMessage, AIMessage
+from langchain_core.messages import AIMessage, HumanMessage, RemoveMessage
 from langchain_core.runnables import RunnableConfig
 
+from ai_companion.graph.state import AICompanionState
 from ai_companion.graph.utils.chains import (
     get_character_response_chain,
     get_router_chain,
 )
 from ai_companion.graph.utils.helpers import (
     get_chat_model,
-    get_text_to_speech_module,
     get_text_to_image_module,
+    get_text_to_speech_module,
 )
-from ai_companion.graph.state import AICompanionState
+from ai_companion.modules.memory.long_term.memory_manager import get_memory_manager
 from ai_companion.modules.schedules.context_generation import ScheduleContextGenerator
 from ai_companion.settings import settings
-from ai_companion.modules.memory.long_term.memory_manager import get_memory_manager
 
 
 async def router_node(state: AICompanionState):
@@ -62,7 +62,7 @@ async def image_node(state: AICompanionState, config: RunnableConfig):
 
     scenario = await text_to_image_module.create_scenario(state["messages"][-5:])
     os.makedirs("generated_images", exist_ok=True)
-    img_path = f"generated_images/image_{str(uuid4())}.png"
+    img_path = f"generated_images/image_{uuid4()!s}.png"
     await text_to_image_module.generate_image(scenario.image_prompt, img_path)
 
     # Inject the image prompt information as an AI message

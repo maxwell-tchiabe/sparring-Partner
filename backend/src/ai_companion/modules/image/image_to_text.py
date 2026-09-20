@@ -1,23 +1,24 @@
-import os
 import base64
-from typing import Optional, Union
 import logging
+import os
+from typing import ClassVar
+
 from groq import Groq
 
-from ai_companion.settings import settings
 from ai_companion.core.exceptions import ImageToTextError
 from ai_companion.core.helpers import clean_env_var
+from ai_companion.settings import settings
 
 
 class ImageToText:
     """A class to handle image-to-text conversion using Groq's vision capabilities."""
 
-    REQUIRED_ENV_VARS = ["GROQ_API_KEY"]
+    REQUIRED_ENV_VARS: ClassVar[list[str]] = ["GROQ_API_KEY"]
 
     def __init__(self):
         """Initialize the ImageToText class and validate environment variables."""
         self._validate_env_vars()
-        self._client: Optional[Groq] = None
+        self._client: Groq | None = None
         self.logger = logging.getLogger(__name__)
 
     def _validate_env_vars(self) -> None:
@@ -36,7 +37,7 @@ class ImageToText:
         return self._client
 
     async def analyze_image(
-        self, image_data: Union[str, bytes], prompt: str = ""
+        self, image_data: str | bytes, prompt: str = ""
     ) -> str:
         """Analyze an image using Groq's vision capabilities.
 
@@ -56,7 +57,7 @@ class ImageToText:
             if isinstance(image_data, str):
                 if not os.path.exists(image_data):
                     raise ValueError(f"Image file not found: {image_data}")
-                with open(image_data, "rb") as f:
+                with open(image_data, "rb") as f:  # noqa: ASYNC230
                     image_bytes = f.read()
             else:
                 image_bytes = image_data
@@ -103,4 +104,4 @@ class ImageToText:
             return description
 
         except Exception as e:
-            raise ImageToTextError(f"Failed to analyze image: {str(e)}") from e
+            raise ImageToTextError(f"Failed to analyze image: {e!s}") from e

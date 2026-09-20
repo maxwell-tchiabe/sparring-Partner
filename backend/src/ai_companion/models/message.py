@@ -1,8 +1,9 @@
-from datetime import datetime, timezone
-from typing import Optional, Literal
-from pydantic import BaseModel, Field, ConfigDict, AliasGenerator
-from pydantic.alias_generators import to_camel
 import uuid
+from datetime import UTC, datetime
+from typing import Literal
+
+from pydantic import AliasGenerator, BaseModel, ConfigDict, Field
+from pydantic.alias_generators import to_camel
 
 
 class MessageContent(BaseModel):
@@ -17,9 +18,9 @@ class MessageContent(BaseModel):
 
     type: Literal["conversation", "audio", "image", "pdf"]
     text: str
-    audioFile: Optional[bytes] = None
-    imageFile: Optional[bytes] = None
-    pdfUrl: Optional[str] = None
+    audioFile: bytes | None = None
+    imageFile: bytes | None = None
+    pdfUrl: str | None = None
 
 
 class Message(BaseModel):
@@ -38,7 +39,7 @@ class Message(BaseModel):
     session_id: str
     sender: Literal["user", "assistant"]
     content: MessageContent
-    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    audio: Optional[str] = None
-    image: Optional[str] = None
-    pdf: Optional[str] = None
+    timestamp: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
+    audio: str | None = None
+    image: str | None = None
+    pdf: str | None = None

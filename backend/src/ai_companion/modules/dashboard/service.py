@@ -1,17 +1,23 @@
 import logging
-from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional
-from uuid import UUID
-import json
+from datetime import UTC, datetime, timedelta
 
-from ai_companion.database.supabase import db
-from ai_companion.models.dashboard import (
-    DashboardStats, AIInsight, Badge, LearningError,
-    VocabularyStats, ConversationStats, GrammarStats, WeeklyProgress
-)
-from ai_companion.graph.utils.helpers import get_chat_model
+# Service boundaries return safe fallbacks when external services fail.
+# ruff: noqa: BLE001
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
+
+from ai_companion.database.supabase import db
+from ai_companion.graph.utils.helpers import get_chat_model
+from ai_companion.models.dashboard import (
+    AIInsight,
+    Badge,
+    ConversationStats,
+    DashboardStats,
+    GrammarStats,
+    LearningError,
+    VocabularyStats,
+    WeeklyProgress,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -21,8 +27,8 @@ class ErrorExtraction(BaseModel):
     correction: str = Field(description="The corrected version")
 
 class DashboardAnalysis(BaseModel):
-    errors: List[ErrorExtraction] = Field(default_factory=list)
-    insight: Optional[str] = Field(None, description="A pedagogical insight or encouragement")
+    errors: list[ErrorExtraction] = Field(default_factory=list)
+    insight: str | None = Field(None, description="A pedagogical insight or encouragement")
 
 class DashboardService:
     @staticmethod
@@ -67,7 +73,10 @@ class DashboardService:
                 grammar_score = max(0, 100 - int((error_count / total_msgs) * 100))
 
             # Weekly Progress
-            last_7_days = [(datetime.now() - timedelta(days=i)).date() for i in range(7)]
+            last_7_days = [
+                (datetime.now(UTC) - timedelta(days=i)).date()
+                for i in range(7)
+            ]
             days_active = sum(1 for d in last_7_days if d in active_days)
 
             logger.info(f"[DashboardStats] Result: learned_vocab={learned_vocab}, error_count={error_count}, grammar_score={grammar_score}, days_active={days_active}")
@@ -83,7 +92,7 @@ class DashboardService:
             return DashboardStats()
 
     @staticmethod
-    async def get_insights(user_id: str) -> List[AIInsight]:
+    async def get_insights(user_id: str) -> list[AIInsight]:
         """Fetch or generate AI insights for the user"""
         # For now, we return a pedagogical insight or check if we have stored some.
         # Minimal implementation: return one static for demo or dynamic if history exists.
@@ -93,12 +102,12 @@ class DashboardService:
             return [AIInsight(type="improvement", content="Start your first conversation to get personalized learning insights!")]
         
         # Simple heuristic based on errors
-        categories = {}
+        categories: dict[str, int] = {}
         for e in errors:
             cat = e.get("category", "General")
             categories[cat] = categories.get(cat, 0) + 1
             
-        top_category = max(categories, key=categories.get)
+        top_category = max(categories, key=lambda category: categories[category])
         
         return [
             AIInsight(
@@ -112,13 +121,13 @@ class DashboardService:
         ]
 
     @staticmethod
-    async def get_badges(user_id: str) -> List[Badge]:
+    async def get_badges(user_id: str) -> list[Badge]:
         """Retrieve badges earned by the user"""
         badge_data = await db.get_user_badges(user_id)
         return [Badge(**b) for b in badge_data]
 
     @staticmethod
-    async def get_learning_errors(user_id: str) -> List[LearningError]:
+    async def get_learning_errors(user_id: str) -> list[LearningError]:
         """Retrieve learning errors for the user"""
         error_data = await db.get_user_learning_errors(user_id)
         return [LearningError(**e) for e in error_data]
@@ -157,7 +166,7 @@ class DashboardService:
                     "category": err.category,
                     "detail": err.detail,
                     "correction": err.correction,
-                    "timestamp": datetime.now().isoformat()
+                    "timestamp": datetime.now(UTC).isoformat()
                 }
                 await db.save_learning_error(error_item)
                 logger.debug(f"[DashboardAnalysis] Saved learning error: {err.category}")
@@ -173,7 +182,7 @@ class DashboardService:
                     "name": "First Steps",
                     "description": "Sent your first message to your AI partner!",
                     "icon": "Footprints",
-                    "earned_at": datetime.now().isoformat()
+                    "earned_at": datetime.now(UTC).isoformat()
                 })
 
             # Chatty Badge (10 messages in current session)
@@ -185,7 +194,7 @@ class DashboardService:
                     "name": "Chatty",
                     "description": "Engaged in a long conversation with 10+ messages!",
                     "icon": "MessageSquareText",
-                    "earned_at": datetime.now().isoformat()
+                    "earned_at": datetime.now(UTC).isoformat()
                 })
                 logger.info(f"[DashboardAnalysis] Awarded 'Chatty' badge to user {user_id}")
 

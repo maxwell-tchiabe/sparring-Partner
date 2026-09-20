@@ -38,6 +38,9 @@ dev = [
     "pre-commit>=4.0.1",
 ]
 
+[tool.mypy]
+ignore_missing_imports = true
+
 [[tool.uv.index]]
 name = "pytorch-cpu"
 url = "https://download.pytorch.org/whl/cpu"

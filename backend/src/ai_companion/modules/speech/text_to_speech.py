@@ -1,22 +1,24 @@
 import os
-from elevenlabs import ElevenLabs, Voice, VoiceSettings
-from typing import Optional
+from typing import Any, ClassVar
 
 from ai_companion.core.exceptions import TextToSpeechError
-from ai_companion.settings import settings
 from ai_companion.core.helpers import clean_env_var
+from ai_companion.settings import settings
 
 
 class TextToSpeech:
     """A class to handle text-to-speech conversion using ElevenLabs."""
 
     # Required environment variables
-    REQUIRED_ENV_VARS = ["ELEVENLABS_API_KEY", "ELEVENLABS_VOICE_ID"]
+    REQUIRED_ENV_VARS: ClassVar[list[str]] = [
+        "ELEVENLABS_API_KEY",
+        "ELEVENLABS_VOICE_ID",
+    ]
 
     def __init__(self):
         """Initialize the TextToSpeech class and validate environment variables."""
         self._validate_env_vars()
-        self._client: Optional[ElevenLabs] = None
+        self._client: Any | None = None
 
     def _validate_env_vars(self) -> None:
         """Validate that all required environment variables are set."""
@@ -27,9 +29,11 @@ class TextToSpeech:
             )
 
     @property
-    def client(self) -> ElevenLabs:
+    def client(self) -> Any:
         """Get or create ElevenLabs client instance using singleton pattern."""
         if self._client is None:
+            from elevenlabs import ElevenLabs
+
             self._client = ElevenLabs(api_key=clean_env_var(settings.ELEVENLABS_API_KEY))
         return self._client
 
@@ -69,5 +73,5 @@ class TextToSpeech:
 
         except Exception as e:
             raise TextToSpeechError(
-                f"Text-to-speech conversion failed: {str(e)}"
+                f"Text-to-speech conversion failed: {e!s}"
             ) from e

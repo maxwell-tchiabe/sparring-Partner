@@ -1,6 +1,10 @@
-from fastapi import APIRouter, Response, Body, HTTPException, Request
-from pydantic import BaseModel
 import logging
+
+# API boundary handlers intentionally normalize unexpected failures.
+# ruff: noqa: BLE001
+from fastapi import APIRouter, HTTPException, Request, Response
+from pydantic import BaseModel
+
 from ai_companion.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -22,7 +26,7 @@ async def set_session(response: Response, request_data: SessionRequest):
         is_production = settings.ENVIRONMENT == "production"
         
         # DEBUG LOGS
-        print(f"--- AUTH DEBUG: SET SESSION ---")
+        print("--- AUTH DEBUG: SET SESSION ---")
         print(f"ENVIRONMENT: {settings.ENVIRONMENT}")
         print(f"is_production: {is_production}")
         print(f"COOKIE_DOMAIN: {settings.COOKIE_DOMAIN}")
@@ -46,7 +50,7 @@ async def set_session(response: Response, request_data: SessionRequest):
             cookie_params["domain"] = settings.COOKIE_DOMAIN
 
         print(f"Cookie Params: {cookie_params}")
-        print(f"-------------------------------")
+        print("-------------------------------")
 
         # Set the Access Token cookie
         response.set_cookie(
@@ -74,14 +78,14 @@ async def get_me(request: Request):
     This allows the frontend to rehydrate the session without localStorage.
     """
     # DEBUG LOGS
-    print(f"--- AUTH DEBUG: GET ME ---")
+    print("--- AUTH DEBUG: GET ME ---")
     print(f"All Cookies: {request.cookies}")
     
     access_token = request.cookies.get(ACCESS_TOKEN_COOKIE)
     refresh_token = request.cookies.get(REFRESH_TOKEN_COOKIE)
     
     print(f"Found tokens: {bool(access_token)}, {bool(refresh_token)}")
-    print(f"--------------------------")
+    print("--------------------------")
     
     if not access_token or not refresh_token:
         raise HTTPException(status_code=401, detail="No session found")

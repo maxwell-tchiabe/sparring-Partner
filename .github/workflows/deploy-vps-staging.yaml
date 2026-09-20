@@ -12,8 +12,47 @@ env:
   IMAGE_NAME: ghcr.io/maxwell-tchiabe/sparring-partner-api
 
 jobs:
+  unit-tests:
+    name: Run backend unit tests
+    runs-on: ubuntu-latest
+    env:
+      # Unit tests use mocked services but some modules load settings at import time.
+      SUPABASE_URL: http://localhost:54321
+      SUPABASE_KEY: test-supabase-key
+      GROQ_API_KEY: test-groq-key
+      ELEVENLABS_API_KEY: test-elevenlabs-key
+      ELEVENLABS_VOICE_ID: test-voice-id
+      TOGETHER_API_KEY: test-together-key
+      QDRANT_URL: http://localhost:6333
+      QDRANT_API_KEY: test-qdrant-key
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: latest
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: uv sync --frozen
+
+      - name: Run unit tests
+        working-directory: backend
+        env:
+          PYTHONPATH: src
+        run: uv run python -m unittest discover -s tests -v
+
   build-and-push:
     name: Build & Push Docker Image
+    needs: unit-tests
     runs-on: ubuntu-latest
     permissions:
       contents: read

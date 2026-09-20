@@ -1,9 +1,10 @@
-from typing import Optional
+import os
+
+# Authentication failures are converted into safe HTTP responses at this boundary.
+# ruff: noqa: BLE001
 from fastapi import HTTPException, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
-import os
-
 
 JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET")
 
@@ -12,7 +13,7 @@ if not all([ JWT_SECRET]):
 
 security = HTTPBearer()
 
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(security)) -> str:
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(security)) -> str:  # noqa: B008
     """
     Validates the JWT token and returns the user ID
     """
@@ -35,11 +36,11 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(
                 raise HTTPException(status_code=401, detail="Invalid authentication token - no user ID found")
         return str(user_id)
     except JWTError as je:
-        raise HTTPException(status_code=401, detail=f"Invalid authentication token: {str(je)}")
+        raise HTTPException(status_code=401, detail=f"Invalid authentication token: {je!s}")
     except Exception as e:
         raise HTTPException(status_code=401, detail=str(e))
 
-def verify_token(token: str) -> Optional[str]:
+def verify_token(token: str) -> str | None:
     """
     Verifies a JWT token and returns the user ID if valid
     """
@@ -61,8 +62,8 @@ def verify_token(token: str) -> Optional[str]:
         print(f"Found user_id: {user_id}")  # Debug log
         return str(user_id) if user_id else None
     except JWTError as je:
-        print(f"JWT Error: {str(je)}")  # Debug log
+        print(f"JWT Error: {je!s}")  # Debug log
         return None
     except Exception as e:
-        print(f"Unexpected error in verify_token: {str(e)}")  # Debug log
+        print(f"Unexpected error in verify_token: {e!s}")  # Debug log
         return None

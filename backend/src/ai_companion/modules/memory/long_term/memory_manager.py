@@ -1,14 +1,13 @@
 import logging
 import uuid
-from datetime import datetime
-from typing import List, Optional
+from datetime import UTC, datetime
 
 from langchain_core.messages import BaseMessage
 from langchain_groq import ChatGroq
 from pydantic import BaseModel, Field
 
-from ai_companion.core.prompts import MEMORY_ANALYSIS_PROMPT
 from ai_companion.core.helpers import clean_env_var
+from ai_companion.core.prompts import MEMORY_ANALYSIS_PROMPT
 from ai_companion.modules.memory.long_term.vector_store import get_vector_store
 from ai_companion.settings import settings
 
@@ -20,7 +19,7 @@ class MemoryAnalysis(BaseModel):
         ...,
         description="Whether the message is important enough to be stored as a memory",
     )
-    formatted_memory: Optional[str] = Field(
+    formatted_memory: str | None = Field(
         ..., description="The formatted memory to be stored"
     )
 
@@ -66,11 +65,11 @@ class MemoryManager:
                 text=analysis.formatted_memory,
                 metadata={
                     "id": str(uuid.uuid4()),
-                    "timestamp": datetime.now().isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                 },
             )
 
-    def get_relevant_memories(self, context: str) -> List[str]:
+    def get_relevant_memories(self, context: str) -> list[str]:
         """Retrieve relevant memories based on the current context."""
         memories = self.vector_store.search_memories(context, k=settings.MEMORY_TOP_K)
         if memories:
@@ -80,7 +79,7 @@ class MemoryManager:
                 )
         return [memory.text for memory in memories]
 
-    def format_memories_for_prompt(self, memories: List[str]) -> str:
+    def format_memories_for_prompt(self, memories: list[str]) -> str:
         """Format retrieved memories as bullet points."""
         if not memories:
             return ""

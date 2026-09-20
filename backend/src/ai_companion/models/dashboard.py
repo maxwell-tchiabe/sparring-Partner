@@ -1,7 +1,8 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional
 from datetime import datetime
 from uuid import UUID, uuid4
+
+from pydantic import BaseModel, Field
+
 
 class VocabularyStats(BaseModel):
     learned: int = 0
@@ -44,4 +45,4 @@ class LearningError(BaseModel):
     category: str
     detail: str
     correction: str
-    session_id: Optional[UUID] = None
+    session_id: UUID | None = None

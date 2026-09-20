@@ -1,7 +1,7 @@
 import base64
 import logging
 import os
-from typing import Optional
+from typing import ClassVar
 
 from langchain.prompts import PromptTemplate
 from langchain_groq import ChatGroq
@@ -9,10 +9,9 @@ from pydantic import BaseModel, Field
 from together import Together
 
 from ai_companion.core.exceptions import TextToImageError
+from ai_companion.core.helpers import clean_env_var
 from ai_companion.core.prompts import IMAGE_ENHANCEMENT_PROMPT, IMAGE_SCENARIO_PROMPT
 from ai_companion.settings import settings
-from ai_companion.core.helpers import clean_env_var
-
 
 
 class ScenarioPrompt(BaseModel):
@@ -38,12 +37,12 @@ class EnhancedPrompt(BaseModel):
 class TextToImage:
     """A class to handle text-to-image generation using Together AI."""
 
-    REQUIRED_ENV_VARS = ["GROQ_API_KEY", "TOGETHER_API_KEY"]
+    REQUIRED_ENV_VARS: ClassVar[list[str]] = ["GROQ_API_KEY", "TOGETHER_API_KEY"]
 
     def __init__(self):
         """Initialize the TextToImage class and validate environment variables."""
         self._validate_env_vars()
-        self._together_client: Optional[Together] = None
+        self._together_client: Together | None = None
         self.logger = logging.getLogger(__name__)
 
     def _validate_env_vars(self) -> None:
@@ -83,20 +82,23 @@ class TextToImage:
 
             if output_path:
                 os.makedirs(os.path.dirname(output_path), exist_ok=True)
-                with open(output_path, "wb") as f:
+                with open(output_path, "wb") as f:  # noqa: ASYNC230
                     f.write(image_data)
                 self.logger.info(f"Image saved to {output_path}")
 
             return image_data
 
         except Exception as e:
-            raise TextToImageError(f"Failed to generate image: {str(e)}") from e
+            raise TextToImageError(f"Failed to generate image: {e!s}") from e
 
-    async def create_scenario(self, chat_history: list = None) -> ScenarioPrompt:
+    async def create_scenario(
+        self, chat_history: list | None = None
+    ) -> ScenarioPrompt:
         """Creates a first-person narrative scenario and corresponding image prompt based on chat history."""
         try:
+            history = chat_history or []
             formatted_history = "\n".join(
-                [f"{msg.type.title()}: {msg.content}" for msg in chat_history[-5:]]
+                [f"{msg.type.title()}: {msg.content}" for msg in history[-5:]]
             )
 
             self.logger.info("Creating scenario from chat history")
@@ -124,7 +126,7 @@ class TextToImage:
             return scenario
 
         except Exception as e:
-            raise TextToImageError(f"Failed to create scenario: {str(e)}") from e
+            raise TextToImageError(f"Failed to create scenario: {e!s}") from e
 
     async def enhance_prompt(self, prompt: str) -> str:
         """Enhance a simple prompt with additional details and context."""
@@ -154,4 +156,4 @@ class TextToImage:
             return enhanced_prompt
 
         except Exception as e:
-            raise TextToImageError(f"Failed to enhance prompt: {str(e)}") from e
+            raise TextToImageError(f"Failed to enhance prompt: {e!s}") from e

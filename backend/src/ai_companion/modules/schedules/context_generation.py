@@ -1,21 +1,21 @@
-from datetime import datetime
-from typing import Dict, Optional
+from datetime import datetime, time
+from typing import ClassVar
 
 from ai_companion.core.schedules import (
-    MONDAY_SCHEDULE,
-    TUESDAY_SCHEDULE,
-    WEDNESDAY_SCHEDULE,
-    THURSDAY_SCHEDULE,
     FRIDAY_SCHEDULE,
+    MONDAY_SCHEDULE,
     SATURDAY_SCHEDULE,
     SUNDAY_SCHEDULE,
+    THURSDAY_SCHEDULE,
+    TUESDAY_SCHEDULE,
+    WEDNESDAY_SCHEDULE,
 )
 
 
 class ScheduleContextGenerator:
     """Class to generate context about Ava's current activity based on schedules."""
 
-    SCHEDULES = {
+    SCHEDULES: ClassVar[dict[int, dict[str, str]]] = {
         0: MONDAY_SCHEDULE,  # Monday
         1: TUESDAY_SCHEDULE,  # Tuesday
         2: WEDNESDAY_SCHEDULE,  # Wednesday
@@ -26,22 +26,22 @@ class ScheduleContextGenerator:
     }
 
     @staticmethod
-    def _parse_time_range(time_range: str) -> tuple[datetime.time, datetime.time]:
+    def _parse_time_range(time_range: str) -> tuple[time, time]:
         """Parse a time range string (e.g., '06:00-07:00') into start and end times."""
         start_str, end_str = time_range.split("-")
-        start_time = datetime.strptime(start_str, "%H:%M").time()
-        end_time = datetime.strptime(end_str, "%H:%M").time()
+        start_time = datetime.strptime(start_str, "%H:%M").time()  # noqa: DTZ007
+        end_time = datetime.strptime(end_str, "%H:%M").time()  # noqa: DTZ007
         return start_time, end_time
 
     @classmethod
-    def get_current_activity(cls) -> Optional[str]:
+    def get_current_activity(cls) -> str | None:
         """Get Ava's current activity based on the current time and day of the week.
 
         Returns:
             str: Description of current activity, or None if no matching time slot is found
         """
         # Get current time and day of week (0 = Monday, 6 = Sunday)
-        current_datetime = datetime.now()
+        current_datetime = datetime.now()  # noqa: DTZ005
         current_time = current_datetime.time()
         current_day = current_datetime.weekday()
 
@@ -63,7 +63,7 @@ class ScheduleContextGenerator:
         return None
 
     @classmethod
-    def get_schedule_for_day(cls, day: int) -> Dict[str, str]:
+    def get_schedule_for_day(cls, day: int) -> dict[str, str]:
         """Get the complete schedule for a specific day.
 
         Args:

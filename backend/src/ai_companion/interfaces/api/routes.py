@@ -1,25 +1,32 @@
-import logging
 import base64
+import logging
 from io import BytesIO
-from typing import Dict, Optional, List
-from jose import JWTError, jwt
 
-from fastapi import APIRouter, Response, UploadFile, File, Form, HTTPException, Body, Query, Path, Request, BackgroundTasks
-from fastapi.responses import JSONResponse
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Body,
+    File,
+    Form,
+    HTTPException,
+    Path,
+    Request,
+    UploadFile,
+)
 from fastapi.openapi.utils import get_openapi
-from fastapi.openapi.docs import get_swagger_ui_html
 from langchain_core.messages import HumanMessage
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
-from ai_companion.core.auth import verify_token
+from slowapi.util import get_remote_address
 
+from ai_companion.core.auth import verify_token
+from ai_companion.database.supabase import db
 from ai_companion.graph import graph_builder
+from ai_companion.models.chat_session import ChatSession
+from ai_companion.models.message import Message, MessageContent
+from ai_companion.modules.dashboard.service import DashboardService
 from ai_companion.modules.image import ImageToText
 from ai_companion.modules.speech import SpeechToText, TextToSpeech
 from ai_companion.settings import settings
-from ai_companion.database.supabase import db
-from ai_companion.models.message import Message, MessageContent
-from ai_companion.models.chat_session import ChatSession
-from ai_companion.modules.dashboard.service import DashboardService
 
 logger = logging.getLogger(__name__)
 
@@ -73,11 +80,11 @@ async def create_chat_session(request: Request):
         stored_session = await db.create_chat_session(session)
         return stored_session
     except Exception as e:
-        logger.error(f"Error while creating chat session: {e}", exc_info=True)
+        logger.exception("Error while creating chat session")
         raise HTTPException(status_code=500, detail=str(e))
 
 @chat_router.get("/api/chat-sessions",
-    response_model=List[ChatSession],
+    response_model=list[ChatSession],
     summary="Get all chat sessions",
     description="Retrieves all chat sessions for the authenticated user",
     response_description="List of chat sessions",
@@ -89,11 +96,11 @@ async def get_chat_sessions(request: Request):
         sessions = await db.get_chat_sessions(user_id)
         return sessions
     except Exception as e:
-        logger.error(f"Error retrieving chat sessions: {e}", exc_info=True)
+        logger.exception("Error retrieving chat sessions")
         raise HTTPException(status_code=500, detail=str(e))
 
 @chat_router.patch("/api/chat-sessions/{session_id}",
-    response_model=Dict[str, str],
+    response_model=dict[str, str],
     summary="Update a chat session",
     description="Updates the specified chat session with new data",
     response_description="Success message",
@@ -101,7 +108,7 @@ async def get_chat_sessions(request: Request):
 async def update_chat_session(
     request: Request,
     session_id: str = Path(..., description="The ID of the chat session to update"),
-    update_data: Dict = Body(..., description="Data to update in the chat session")
+    update_data: dict = Body(..., description="Data to update in the chat session")  # noqa: B008
 ):
     """Update a chat session"""
     try:
@@ -127,11 +134,11 @@ async def update_chat_session(
             raise HTTPException(status_code=500, detail="Failed to update chat session")
         return {"status": "success", "message": "Chat session updated"}
     except Exception as e:
-        logger.error(f"Error updating chat session: {e}", exc_info=True)
+        logger.exception("Error updating chat session")
         raise HTTPException(status_code=500, detail=str(e))
 
 @chat_router.delete("/api/chat-sessions/{session_id}",
-    response_model=Dict[str, str],
+    response_model=dict[str, str],
     summary="Delete a chat session",
     description="Deletes a chat session and all its associated messages",
     response_description="Success message",
@@ -156,11 +163,11 @@ async def delete_chat_session(
             raise HTTPException(status_code=500, detail="Failed to delete chat session")
         return {"status": "success", "message": "Chat session deleted"}
     except Exception as e:
-        logger.error(f"Error deleting chat session: {e}", exc_info=True)
+        logger.exception("Error deleting chat session")
         raise HTTPException(status_code=500, detail=str(e))
 
 @chat_router.post("/api/chat",
-    response_model=Dict,
+    response_model=dict,
     summary="Send a message to chat",
     description="""Handle chat interactions with support for text, audio, and image inputs.
     Only one of message, audio, or image should be provided at a time.""",
@@ -171,9 +178,9 @@ async def chat_handler(
     background_tasks: BackgroundTasks,
     session_id: str = Form(..., description="ID of the chat session"),
     # ... rest of parameters
-    message: Optional[str] = Form(None, description="Text message to send"),
-    audio: Optional[UploadFile] = File(None, description="Audio file to process"),
-    image: Optional[UploadFile] = File(None, description="Image file to analyze"),
+    message: str | None = Form(None, description="Text message to send"),
+    audio: UploadFile | None = File(None, description="Audio file to process"),  # noqa: B008
+    image: UploadFile | None = File(None, description="Image file to analyze"),  # noqa: B008
 ):
     """Handle chat interactions from Next.js frontend"""
     try:
@@ -272,7 +279,7 @@ async def chat_handler(
                 
         elif workflow == "image":
             image_path = output_state.values["image_path"]
-            with open(image_path, "rb") as f:
+            with open(image_path, "rb") as f:  # noqa: ASYNC230
                 assistant_message.image = base64.b64encode(f.read()).decode('utf-8')
 
         # Store assistant's response
@@ -300,12 +307,12 @@ async def chat_handler(
         return response_data
 
     except Exception as e:
-        logger.error(f"Error processing message: {e}", exc_info=True)
+        logger.exception("Error processing message")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @chat_router.get("/api/messages/{session_id}",
-    response_model=List[Dict],
+    response_model=list[dict],
     summary="Get session messages",
     description="Retrieves all messages for a specific chat session",
     response_description="List of messages with their content and metadata",
@@ -336,12 +343,12 @@ async def get_session_messages(
             for msg in messages
         ]
     except Exception as e:
-        logger.error(f"Error retrieving messages: {e}", exc_info=True)
+        logger.exception("Error retrieving messages")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @chat_router.get("/api/health",
-    response_model=Dict[str, str],
+    response_model=dict[str, str],
     summary="Health check",
     description="Check if the API is up and running",
     response_description="Service status",

@@ -1,11 +1,13 @@
-from supabase import create_client, Client
-from typing import List, Optional, Dict, Any
-from ..models.message import Message
-from ..models.chat_session import ChatSession
-from ..settings import settings
-from ..core.helpers import clean_env_var
 import logging
-from datetime import datetime
+
+# Database failures are normalized into the service's public error behavior.
+# ruff: noqa: BLE001
+from supabase import Client, create_client
+
+from ..core.helpers import clean_env_var
+from ..models.chat_session import ChatSession
+from ..models.message import Message
+from ..settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +30,7 @@ class SupabaseManager:
             print(f"[DEBUG] Message insert results: {result}")
             
             if not result.data:
-                print(f"[ERROR] No data returned from message insert operation")
+                print("[ERROR] No data returned from message insert operation")
                 raise RuntimeError("Failed to save message")
             
             # Update chat session title based on first user message
@@ -41,10 +43,10 @@ class SupabaseManager:
                 print(f"[DEBUG] Message count for session: {messages_count}")
                 
                 if messages_count == 1:
-                    print(f"[DEBUG] First message in session, updating title")
+                    print("[DEBUG] First message in session, updating title")
                     title = message.content.text[:30] + "..." if len(message.content.text) > 30 else message.content.text
                     title = "".join(char for char in title if char.isprintable())  # Clean title
-                    print(f"[DEBUG] New title: {repr(title)}")
+                    print(f"[DEBUG] New title: {title!r}")
                     update_result = self.client.table("chat_sessions").update({"title": title}).eq("id", message.session_id).execute()
                     print(f"[DEBUG] Title update result: {update_result}")
             
@@ -53,11 +55,11 @@ class SupabaseManager:
             return saved_message
             
         except Exception as e:
-            print(f"[ERROR] Error saving message: {str(e)}")
+            print(f"[ERROR] Error saving message: {e!s}")
             print(f"[ERROR] Message data that caused error: {vars(message)}")
-            raise RuntimeError(f"Failed to save message: {str(e)}")
+            raise RuntimeError(f"Failed to save message: {e!s}")
 
-    async def get_messages(self, session_id: str, limit: int = 50) -> List[Message]:
+    async def get_messages(self, session_id: str, limit: int = 50) -> list[Message]:
         """Retrieve messages for a session"""
         try:
             if not session_id:
@@ -78,11 +80,11 @@ class SupabaseManager:
             return msgs
             
         except Exception as e:
-            error_msg = f"Error retrieving messages for session {session_id}: {str(e)}"
+            error_msg = f"Error retrieving messages for session {session_id}: {e!s}"
             logger.error(error_msg)
             raise RuntimeError(error_msg)
 
-    async def get_message(self, message_id: str) -> Optional[Message]:
+    async def get_message(self, message_id: str) -> Message | None:
         """Retrieve a specific message by ID"""
         try:
             result = (self.client.table("messages")
@@ -94,18 +96,18 @@ class SupabaseManager:
             return Message(**result.data) if result.data else None
             
         except Exception as e:
-            logger.error(f"Error retrieving message: {str(e)}")
-            raise RuntimeError(f"Failed to retrieve message: {str(e)}")
+            logger.error(f"Error retrieving message: {e!s}")
+            raise RuntimeError(f"Failed to retrieve message: {e!s}")
 
     async def create_chat_session(self, session: ChatSession) -> ChatSession:
         """Create a new chat session"""
         try:
             print(f"[DEBUG] Creating chat session with ID: {session.id}")
-            print(f"[DEBUG] Original title: {repr(session.title)}")
+            print(f"[DEBUG] Original title: {session.title!r}")
             
             # Clean the title field to remove any non-printable characters
             session.title = "".join(char for char in session.title if char.isprintable())
-            print(f"[DEBUG] Cleaned title: {repr(session.title)}")
+            print(f"[DEBUG] Cleaned title: {session.title!r}")
             
             session_dict = session.model_dump(by_alias=False)
             print(f"[DEBUG] Session dict before insert: {session_dict}")
@@ -114,7 +116,7 @@ class SupabaseManager:
             print(f"[DEBUG] Insert result: {result}")
             
             if not result.data:
-                print(f"[ERROR] No data returned from insert operation")
+                print("[ERROR] No data returned from insert operation")
                 raise RuntimeError("Failed to create chat session")
             
             created_session = ChatSession(**result.data[0])
@@ -122,11 +124,11 @@ class SupabaseManager:
             return created_session
             
         except Exception as e:
-            print(f"[ERROR] Error creating chat session: {str(e)}")
+            print(f"[ERROR] Error creating chat session: {e!s}")
             print(f"[ERROR] Session data that caused error: {vars(session)}")
-            raise RuntimeError(f"Failed to create chat session: {str(e)}")
+            raise RuntimeError(f"Failed to create chat session: {e!s}")
 
-    async def get_chat_sessions(self, user_id: Optional[str] = None, limit: int = 50) -> List[ChatSession]:
+    async def get_chat_sessions(self, user_id: str | None = None, limit: int = 50) -> list[ChatSession]:
         """Retrieve chat sessions, optionally filtered by user_id"""
         try:
             query = self.client.table("chat_sessions").select("*")
@@ -140,10 +142,10 @@ class SupabaseManager:
             return sessions
             
         except Exception as e:
-            logger.error(f"Error retrieving chat sessions: {str(e)}")
-            raise RuntimeError(f"Failed to retrieve chat sessions: {str(e)}")
+            logger.error(f"Error retrieving chat sessions: {e!s}")
+            raise RuntimeError(f"Failed to retrieve chat sessions: {e!s}")
 
-    async def get_chat_session(self, session_id: str) -> Optional[ChatSession]:
+    async def get_chat_session(self, session_id: str) -> ChatSession | None:
         """Get a single chat session by ID"""
         try:
             result = (self.client.table("chat_sessions")
@@ -155,8 +157,8 @@ class SupabaseManager:
             return ChatSession(**result.data) if result.data else None
             
         except Exception as e:
-            logger.error(f"Error retrieving chat session: {str(e)}")
-            raise RuntimeError(f"Failed to retrieve chat session: {str(e)}")
+            logger.error(f"Error retrieving chat session: {e!s}")
+            raise RuntimeError(f"Failed to retrieve chat session: {e!s}")
 
     async def update_chat_session(self, session_id: str, update_data: dict) -> bool:
         """Update a chat session"""
@@ -169,8 +171,8 @@ class SupabaseManager:
             return bool(result.data)
             
         except Exception as e:
-            logger.error(f"Error updating chat session: {str(e)}")
-            raise RuntimeError(f"Failed to update chat session: {str(e)}")
+            logger.error(f"Error updating chat session: {e!s}")
+            raise RuntimeError(f"Failed to update chat session: {e!s}")
 
     async def delete_chat_session(self, session_id: str) -> bool:
         """Delete a chat session and all its messages"""
@@ -190,10 +192,10 @@ class SupabaseManager:
             return bool(result.data)
             
         except Exception as e:
-            logger.error(f"Error deleting chat session: {str(e)}")
-            raise RuntimeError(f"Failed to delete chat session: {str(e)}") 
+            logger.error(f"Error deleting chat session: {e!s}")
+            raise RuntimeError(f"Failed to delete chat session: {e!s}")
 
-    async def get_user_badges(self, user_id: str) -> List[dict]:
+    async def get_user_badges(self, user_id: str) -> list[dict]:
         """Retrieve badges for a user"""
         try:
             result = (self.client.table("badges")
@@ -204,7 +206,7 @@ class SupabaseManager:
             logger.debug(f"[Supabase] Found {len(result.data)} badges for user {user_id}")
             return result.data
         except Exception as e:
-            logger.error(f"Error retrieving user badges: {str(e)}")
+            logger.error(f"Error retrieving user badges: {e!s}")
             return []
 
     async def save_badge(self, badge_data: dict) -> dict:
@@ -213,10 +215,10 @@ class SupabaseManager:
             result = self.client.table("badges").insert(badge_data).execute()
             return result.data[0] if result.data else {}
         except Exception as e:
-            logger.error(f"Error saving badge: {str(e)}")
-            raise RuntimeError(f"Failed to save badge: {str(e)}")
+            logger.error(f"Error saving badge: {e!s}")
+            raise RuntimeError(f"Failed to save badge: {e!s}")
 
-    async def get_user_learning_errors(self, user_id: str, limit: int = 20) -> List[dict]:
+    async def get_user_learning_errors(self, user_id: str, limit: int = 20) -> list[dict]:
         """Retrieve learning errors for a user"""
         try:
             result = (self.client.table("learning_errors")
@@ -228,7 +230,7 @@ class SupabaseManager:
             logger.debug(f"[Supabase] Found {len(result.data)} errors for user {user_id}")
             return result.data
         except Exception as e:
-            logger.error(f"Error retrieving user learning errors: {str(e)}")
+            logger.error(f"Error retrieving user learning errors: {e!s}")
             return []
 
     async def save_learning_error(self, error_data: dict) -> dict:
@@ -237,8 +239,8 @@ class SupabaseManager:
             result = self.client.table("learning_errors").insert(error_data).execute()
             return result.data[0] if result.data else {}
         except Exception as e:
-            logger.error(f"Error saving learning error: {str(e)}")
-            raise RuntimeError(f"Failed to save learning error: {str(e)}")
+            logger.error(f"Error saving learning error: {e!s}")
+            raise RuntimeError(f"Failed to save learning error: {e!s}")
 
     async def get_message_count(self, user_id: str) -> int:
         """Get total message count for a user across all sessions"""
@@ -257,7 +259,7 @@ class SupabaseManager:
                 .execute())
             return result.count if result.count is not None else 0
         except Exception as e:
-            logger.error(f"Error counting messages: {str(e)}")
+            logger.error(f"Error counting messages: {e!s}")
             return 0
 
 # Create a singleton instance

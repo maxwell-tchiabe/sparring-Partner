@@ -1,25 +1,23 @@
+import os
+
+# Middleware must convert unexpected failures into an HTTP response.
+# ruff: noqa: BLE001
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer
-from ai_companion.interfaces.api.routes import chat_router
-from ai_companion.interfaces.api.dashboard import dashboard_router
-from ai_companion.core.auth import verify_token
-from ai_companion.interfaces.api.auth import auth_router
-from starlette.middleware.base import BaseHTTPMiddleware
-
-import argparse
-from typing import Generator, Tuple
-import fastapi
-import numpy as np
-import os
-
-from prometheus_fastapi_instrumentator import Instrumentator
 from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.trace.sampling import TraceIdRatioBased
-from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from prometheus_fastapi_instrumentator import Instrumentator
+from starlette.middleware.base import BaseHTTPMiddleware
+
+from ai_companion.core.auth import verify_token
+from ai_companion.interfaces.api.auth import auth_router
+from ai_companion.interfaces.api.dashboard import dashboard_router
+from ai_companion.interfaces.api.routes import chat_router
 
 app = FastAPI(
     title="AI Companion API",
@@ -91,7 +89,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
             request.state.user_id = user_id
             return await call_next(request)
         except Exception as e:
-            print(f"Auth middleware error: {str(e)}")  
+            print(f"Auth middleware error: {e!s}")
             return JSONResponse(
                 status_code=401,
                 content={"detail": str(e)}
@@ -100,10 +98,10 @@ class AuthMiddleware(BaseHTTPMiddleware):
 # Startup event to verify configuration
 @app.on_event("startup")
 async def startup_event():
-    print(f"=== API STARTUP DEBUG ===")
+    print("=== API STARTUP DEBUG ===")
     print(f"ENVIRONMENT: {os.getenv('ENVIRONMENT', 'NOT SET')}")
     print(f"COOKIE_DOMAIN: {os.getenv('COOKIE_DOMAIN', 'NOT SET')}")
-    print(f"=========================")
+    print("=========================")
 
 app.add_middleware(AuthMiddleware)
 

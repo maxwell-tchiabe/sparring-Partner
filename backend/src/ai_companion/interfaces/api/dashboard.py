@@ -1,9 +1,16 @@
-from fastapi import APIRouter, Request, HTTPException, Path
-from typing import List, Dict
 import logging
 
+# API boundary handlers intentionally normalize unexpected failures.
+# ruff: noqa: BLE001
+from fastapi import APIRouter, HTTPException, Path, Request
+
+from ai_companion.models.dashboard import (
+    AIInsight,
+    Badge,
+    DashboardStats,
+    LearningError,
+)
 from ai_companion.modules.dashboard.service import DashboardService
-from ai_companion.models.dashboard import DashboardStats, AIInsight, Badge, LearningError
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +30,7 @@ async def get_dashboard_stats(
         logger.error(f"Error fetching dashboard stats: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@dashboard_router.get("/insights/{user_id}", response_model=List[AIInsight])
+@dashboard_router.get("/insights/{user_id}", response_model=list[AIInsight])
 async def get_dashboard_insights(
     request: Request,
     user_id: str = Path(..., description="The ID of the user")
@@ -35,7 +42,7 @@ async def get_dashboard_insights(
         logger.error(f"Error fetching dashboard insights: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@dashboard_router.get("/badges/{user_id}", response_model=List[Badge])
+@dashboard_router.get("/badges/{user_id}", response_model=list[Badge])
 async def get_dashboard_badges(
     request: Request,
     user_id: str = Path(..., description="The ID of the user")
@@ -47,7 +54,7 @@ async def get_dashboard_badges(
         logger.error(f"Error fetching dashboard badges: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@dashboard_router.get("/errors/{user_id}", response_model=List[LearningError])
+@dashboard_router.get("/errors/{user_id}", response_model=list[LearningError])
 async def get_dashboard_errors(
     request: Request,
     user_id: str = Path(..., description="The ID of the user")
