@@ -133,6 +133,8 @@ async def update_chat_session(
         if not was_updated:
             raise HTTPException(status_code=500, detail="Failed to update chat session")
         return {"status": "success", "message": "Chat session updated"}
+    except HTTPException:
+        raise
     except Exception as e:
         logger.exception("Error updating chat session")
         raise HTTPException(status_code=500, detail=str(e))
@@ -306,6 +308,8 @@ async def chat_handler(
 
         return response_data
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.exception("Error processing message")
         raise HTTPException(status_code=500, detail=str(e))

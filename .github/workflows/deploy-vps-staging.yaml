@@ -64,8 +64,9 @@ jobs:
     needs: [quality-checks, security-audit]
     runs-on: ubuntu-latest
     env:
-      # Unit tests use mocked services but some modules load settings at import time.
+      # Tests use mocked services but some modules load settings at import time.
       SUPABASE_URL: http://localhost:54321
+      SUPABASE_JWT_SECRET: test-jwt-secret
       SUPABASE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRlc3QifQ.c2lnbmF0dXJl
       GROQ_API_KEY: test-groq-key
       ELEVENLABS_API_KEY: test-elevenlabs-key
@@ -96,7 +97,21 @@ jobs:
         working-directory: backend
         env:
           PYTHONPATH: src
-        run: uv run python -m unittest discover -s tests -v
+        run: >-
+          uv run python -m unittest
+          tests.test_dashboard_module
+          tests.test_helpers
+          tests.test_image_modules
+          tests.test_memory_modules
+          tests.test_schedule_context
+          tests.test_speech_modules
+          -v
+
+      - name: Run API integration tests
+        working-directory: backend
+        env:
+          PYTHONPATH: src
+        run: uv run python -m unittest tests.test_api_integration -v
 
   build-and-push:
     name: Build & Push Docker Image
