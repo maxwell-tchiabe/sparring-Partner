@@ -46,14 +46,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          version: latest
-
-      - name: Install backend dependencies
-        working-directory: backend
-        run: uv sync --frozen
+      - name: Set up backend
+        uses: ./.github/actions/setup-backend
 
       - name: Run dependency audit
         working-directory: backend
@@ -63,40 +57,19 @@ jobs:
     name: Run backend unit tests
     needs: [quality-checks, security-audit]
     runs-on: ubuntu-latest
-    env:
-      # Tests use mocked services but some modules load settings at import time.
-      SUPABASE_URL: http://localhost:54321
-      SUPABASE_JWT_SECRET: test-jwt-secret
-      SUPABASE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRlc3QifQ.c2lnbmF0dXJl
-      GROQ_API_KEY: test-groq-key
-      ELEVENLABS_API_KEY: test-elevenlabs-key
-      ELEVENLABS_VOICE_ID: test-voice-id
-      TOGETHER_API_KEY: test-together-key
-      QDRANT_URL: http://localhost:6333
-      QDRANT_API_KEY: test-qdrant-key
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
+      - name: Set up test environment
+        uses: ./.github/actions/setup-test-environment
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          version: latest
-
-      - name: Install backend dependencies
-        working-directory: backend
-        run: uv sync --frozen
+      - name: Set up backend
+        uses: ./.github/actions/setup-backend
 
       - name: Run unit tests
         working-directory: backend
-        env:
-          PYTHONPATH: src
         run: >-
           uv run python -m unittest
           tests.test_dashboard_module
@@ -111,40 +84,19 @@ jobs:
     name: Run API integration tests
     needs: [quality-checks, security-audit]
     runs-on: ubuntu-latest
-    env:
-      # Integration tests mock external services but load the application at import time.
-      SUPABASE_URL: http://localhost:54321
-      SUPABASE_JWT_SECRET: test-jwt-secret
-      SUPABASE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRlc3QifQ.c2lnbmF0dXJl
-      GROQ_API_KEY: test-groq-key
-      ELEVENLABS_API_KEY: test-elevenlabs-key
-      ELEVENLABS_VOICE_ID: test-voice-id
-      TOGETHER_API_KEY: test-together-key
-      QDRANT_URL: http://localhost:6333
-      QDRANT_API_KEY: test-qdrant-key
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
+      - name: Set up test environment
+        uses: ./.github/actions/setup-test-environment
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          version: latest
-
-      - name: Install backend dependencies
-        working-directory: backend
-        run: uv sync --frozen
+      - name: Set up backend
+        uses: ./.github/actions/setup-backend
 
       - name: Run API integration tests
         working-directory: backend
-        env:
-          PYTHONPATH: src
         run: uv run python -m unittest tests.test_api_integration -v
 
   build-and-push:
