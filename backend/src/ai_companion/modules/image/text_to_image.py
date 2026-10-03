@@ -3,7 +3,7 @@ import logging
 import os
 from typing import ClassVar
 
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 from langchain_groq import ChatGroq
 from pydantic import BaseModel, Field
 from together import Together
