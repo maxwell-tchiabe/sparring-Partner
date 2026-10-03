@@ -51,7 +51,15 @@ jobs:
 
       - name: Run dependency audit
         working-directory: backend
-        run: uvx pip-audit --path .venv
+        run: uvx pip-audit --path .venv 2>&1 | tee dependency-audit.txt
+
+      - name: Upload dependency audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-audit-report
+          path: backend/dependency-audit.txt
+          if-no-files-found: warn
 
   unit-tests:
     name: Run backend unit tests
@@ -78,7 +86,15 @@ jobs:
           tests.test_memory_modules
           tests.test_schedule_context
           tests.test_speech_modules
-          -v
+          -v 2>&1 | tee unit-test-results.txt
+
+      - name: Upload unit test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-unit-test-results
+          path: backend/unit-test-results.txt
+          if-no-files-found: warn
 
   integration-tests:
     name: Run API integration tests
@@ -97,7 +113,15 @@ jobs:
 
       - name: Run API integration tests
         working-directory: backend
-        run: uv run python -m unittest tests.test_api_integration -v
+        run: uv run python -m unittest tests.test_api_integration -v 2>&1 | tee integration-test-results.txt
+
+      - name: Upload integration test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-integration-test-results
+          path: backend/integration-test-results.txt
+          if-no-files-found: warn
 
   build-and-push:
     name: Build & Push Docker Image
@@ -195,7 +219,16 @@ jobs:
         with:
           image-ref: ${{ env.IMAGE_NAME }}:${{ github.sha }}
           format: table
+          output: trivy-report.txt
           exit-code: "1"
           ignore-unfixed: true
           vuln-type: os,library
           severity: CRITICAL,HIGH
+
+      - name: Upload Trivy scan report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-scan-report
+          path: trivy-report.txt
+          if-no-files-found: warn
