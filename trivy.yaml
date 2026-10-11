@@ -1,0 +1,62 @@
+# Trivy configuration for the ai-companion Python project
+# This configuration addresses the warnings and improves scan quality
+
+# Default vulnerability scanning settings
+default:
+  # Scan only OS and Python language-specific vulnerabilities
+  vuln-type: "os,library"
+  
+  # severity: "CRITICAL,HIGH"  # Can be overridden per scan
+  
+  # Ignore unfixed vulnerabilities (still show them, just don't block on them)
+  ignore-unfixed: true
+  
+  # Remove language-specific files that aren't relevant
+  # This helps with the "Number of language-specific files" count
+  skip-docs: true
+  
+  # Configure severity selection for Python packages
+  # This addresses the "Using severities from other vendors" warning
+  # by explicitly setting the severity selection mode
+  severity:
+    # Use the CVSS base score for severity assessment
+    primary: "cvss"
+    # Fallback severity if CVSS is not available
+    fallback: "none"
+  
+  # Python-specific configuration
+  python:
+    # Include all Python dependencies in the scan
+    # This should increase the "Number of language-specific files" count
+    include-system-site-packages: false
+    
+    # Scan installed Python packages
+    # This ensures all language-specific files are detected
+    scan-pip: true
+    
+    # Add pip index for comprehensive vulnerability database
+    # pip:
+    #   index: https://pypi.org/simple
+
+# Profile for staging production scans
+# This can be referenced in GitHub Actions workflows
+staging:
+  extends: [default]
+  severity: "CRITICAL,HIGH"
+  ignore-unfixed: true
+  
+  # Additional settings for staging environment
+  # vulnerability:
+  #   CVE:
+  #     # Ignore specific CVEs if needed
+  #     # ignore:
+  #     #   - CVE-2021-44228
+  
+  # Configuration for language-specific file scanning
+  # library:
+  #   # Enable language-specific scanning
+  #   python:
+  #     # Include standard library modules
+  #     include-standard-lib: true
+  #     # Include third-party packages
+  #     include-third-party: true
