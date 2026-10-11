@@ -29,8 +29,8 @@ class ScheduleContextGenerator:
     def _parse_time_range(time_range: str) -> tuple[time, time]:
         """Parse a time range string (e.g., '06:00-07:00') into start and end times."""
         start_str, end_str = time_range.split("-")
-        start_time = datetime.strptime(start_str, "%H:%M").time()  # noqa: DTZ007
-        end_time = datetime.strptime(end_str, "%H:%M").time()  # noqa: DTZ007
+        start_time = datetime.strptime(start_str, "%H:%M").time()
+        end_time = datetime.strptime(end_str, "%H:%M").time()
         return start_time, end_time
 
     @classmethod
@@ -41,7 +41,7 @@ class ScheduleContextGenerator:
             str: Description of current activity, or None if no matching time slot is found
         """
         # Get current time and day of week (0 = Monday, 6 = Sunday)
-        current_datetime = datetime.now()  # noqa: DTZ005
+        current_datetime = datetime.now()
         current_time = current_datetime.time()
         current_day = current_datetime.weekday()
 
